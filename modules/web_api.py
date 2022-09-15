@@ -75,15 +75,13 @@ def createAPICallUrl(arguments):
         if profiles.status_code != 200:
            profiles.raise_for_status()
     #check for connection request
-    except requests.exceptions.RequestException as e:
-        print 'CRITICAL - API cannot connect to %s: %s' % ('https://' + arguments.hostname + API_REPORTS,
+    except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+        print ('CRITICAL - API cannot connect to %s: %s' % 'https://' + arguments.hostname + API_REPORTS,
+                                                       errmsg_from_excp(e))
+        print ('CRITICAL - status code error. Cannot connect to %s: %s' % 'https://' + arguments.hostname + API_REPORTS,
                                                        errmsg_from_excp(e))
         raise SystemExit(2)
-    #check for status code error  requests
-    except requests.exceptions.HTTPError as e:
-        print 'CRITICAL - status code error. Cannot connect to %s: %s' % ('https://' + arguments.hostname + API_REPORTS,
-                                                       errmsg_from_excp(e))
-        raise SystemExit(2)
+
 
     # Remove disabled reports from response's data results
     profilesjson["data"] = [ x for x in profilesjson["data"] if x["disabled"] == False ]
@@ -162,11 +160,8 @@ def CheckResults(arguments, profilesjson):
             if resultsAPI.status_code != 200:
                 resultsAPI.raise_for_status()
         #check for connection request
-        except requests.exceptions.RequestException as e:
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
             ProbeDescription['Connection'+reportName] = 'CRITICAL - Reports cannot connect to (https://' + arguments.hostname + pathToUse+'/' +reportName+'/'+reportTopologyGroup +'-'+ errmsg_from_excp(e)
-
-        #check for status code error  requests
-        except requests.exceptions.HTTPError as e:
             ProbeDescription['Status'+reportName] = 'CRITICAL - Status code error. Cannot connect to (https://' + arguments.hostname + pathToUse+'/' +reportName+'/'+reportTopologyGroup +'-'+ errmsg_from_excp(e)
 
 
@@ -196,12 +191,12 @@ def debugValues(arguments):
             arguments: the input arguments
     """
     if arguments.debug:
-        print "[debugValues] - hostname:"+ arguments.hostname
-        print "[debugValues] - tenant:" + arguments.tenant
-        print "[debugValues] - rtype:" + arguments.rtype
-        print "[debugValues] - token:" + arguments.token
+        print ("[debugValues] - hostname:"+ arguments.hostname)
+        print ("[debugValues] - tenant:" + arguments.tenant)
+        print ("[debugValues] - rtype:" + arguments.rtype)
+        print ("[debugValues] - token:" + arguments.token)
         if arguments.timeout!='':
-            print "[debugValues] - timeout:" + str(arguments.timeout)
+            print ("[debugValues] - timeout:" + str(arguments.timeout))
 
 
 def main():
@@ -220,7 +215,7 @@ def main():
     #check arguments
     if arguments.rtype not in ('status','ar'):
         NAGIOS_RESULT = 2
-        print 'CRITICAL: wrong value at argument rtype. rtype must be ar or status'
+        print ('CRITICAL: wrong value at argument rtype. rtype must be ar or status')
         raise SystemExit(2)
 
     profilesjson = createAPICallUrl(arguments)
@@ -234,18 +229,18 @@ def main():
         Description = Description + data[item] + "\n"
 
     if NAGIOS_RESULT == 0:
-        print 'OK - All %s reports for tenant %s return results ' % (arguments.rtype, arguments.tenant)
-        print 'Description:'+Description
+        print ('OK - All %s reports for tenant %s return results ' % (arguments.rtype, arguments.tenant))
+        print ('Description:'+Description)
         debugValues(arguments)
         raise SystemExit(0)
     elif NAGIOS_RESULT == 1:
-        print debugData
+        print (debugData)
         debugValues(arguments)
         raise SystemExit(1)
     elif NAGIOS_RESULT == 2:
-        print 'CRITICAL - Problem with  %s reports for tenant %s return results  ' % (arguments.rtype, arguments.tenant)
-        print 'Description:'+Description
-        print debugData
+        print ('CRITICAL - Problem with  %s reports for tenant %s return results  ' % (arguments.rtype, arguments.tenant))
+        print ('Description:'+Description)
+        print (debugData)
         debugValues(arguments)
         raise SystemExit(2)
 
