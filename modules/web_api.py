@@ -15,7 +15,7 @@ def createAPICallUrl(arguments):
        Args:
            arguments: the main input arguments.
     """
-    profilesjson_list = []
+    profilesjson_list = list()
     for i in range(len(arguments.tenant_token)):
         token = arguments.tenant_token[i][0].split(":")[1]
 
@@ -72,7 +72,7 @@ def CheckResults(arguments, profilesjson):
            arguments: the main input arguments
            profilesjson: the json for a tenant with the reports
     """
-    ProbeDescription = []
+    ProbeDescription = list()
     for i in range(len(arguments.tenant_token)):
         token = arguments.tenant_token[i][0].split(":")[1]
 
@@ -91,7 +91,7 @@ def CheckResults(arguments, profilesjson):
                            yesterday.day, 'end')
 
         # get all report names
-        descriptions_list = []
+        descriptions_list = list()
         while (count < allReports):
             reportName = profilesjson[i]['data'][count]['info']['name']
             reportTopologyGroup = profilesjson[i]['data'][count]['topology_schema']['group']['group']['type']
@@ -147,6 +147,7 @@ def CheckResults(arguments, profilesjson):
                 descriptions_list.append(description)
 
         ProbeDescription.append(descriptions_list)
+        
     return ProbeDescription
 
 
@@ -167,6 +168,7 @@ def utils(arguments, output_dict):
                 NAGIOS_RESULT = 2
         else:
             for item in output_dict[i]:
+
                 if "CRITICAL" in item:
                     msgs_not_ok += f'CRITICAL - Problem with {arguments.rtype} reports for tenant {tenant} return results' + \
                         " / " if f'CRITICAL - Problem with {arguments.rtype} reports for tenant {tenant} return results' not in msgs_not_ok else ""
@@ -186,7 +188,7 @@ def utils(arguments, output_dict):
 
                 Description += item + "\n"
 
-        if arguments.msg > 0:
+        if arguments.debug > 0:
             print(msg)
             print(f"Description: {Description}")
 
@@ -206,7 +208,7 @@ def main():
                         help='days to check (ex. 1 for yesterday, 2 for days ago) default yesterday')
     parser.add_argument('-t', dest='timeout',
                         required=False, type=int, default=180)
-    parser.add_argument('-v', '--verbose', dest="msg",
+    parser.add_argument('-v', '--verbose', dest="debug",
                         help='Set verbosity level', action='count', default=0)
     arguments = parser.parse_args()
 

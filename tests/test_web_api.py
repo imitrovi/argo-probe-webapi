@@ -176,404 +176,406 @@ def mock_fail_web_api(*args, **kwargs):
     )
 
 
-mock_reports_check_results = {
-    'status': {
-        'message': 'Success',
-        'code': '200'
-    },
-    'data': [
-        {
-            'id': 'xxxxxx',
-            'tenant': 'TENANT1111',
-            'disabled': False,
-            'info': {
-                'name': 'REPORT1111',
-                'description': 'Report for SLA service groups',
-                'created': '2019-01-25 13:51:40',
-                'updated': '2022-02-10 14:27:51'
-            },
-            'computations': {
-                'ar': True,
-                'status': True,
-                'trends': [
-                    'flapping',
-                    'status',
-                    'tags'
-                ]
-            },
-            'thresholds': {
-                'availability': 80,
-                'reliability': 85,
-                'uptime': 0.8,
-                'unknown': 0.1,
-                'downtime': 0.1
-            },
-            'topology_schema': {
-                'group': {
-                    'type': 'PROJECT',
-                    'group': {
-                        'type': 'SERVICEGROUPS1111'
-                    }
-                }
-            },
-            'profiles': [
-                {
-                    'id': 'xxxxx',
-                    'name': 'ARGO_MON_CRITICAL',
-                    'type': 'metric'
-                },
-                {
-                    'id': 'xxxxx',
-                    'name': 'sla_test',
-                    'type': 'aggregation'
-                },
-                {
-                    'id': 'xxxxx',
-                    'name': 'ops',
-                    'type': 'operations'
-                }
-            ],
-            'filter_tags': [
-                {
-                    'name': 'production',
-                    'value': '1',
-                    'context': 'argo.endpoint.filter.tags'
-                },
-                {
-                    'name': 'monitored',
-                    'value': '1',
-                    'context': 'argo.endpoint.filter.tags'
-                },
-                {
-                    'name': 'scope',
-                    'value': 'SLA',
-                    'context': 'argo.group.filter.tags.array'
-                }
-            ]
+mock_reports_check_results = [
+    {
+        'status': {
+            'message': 'Success',
+            'code': '200'
         },
-        {
-            'id': 'xxxxx',
-            'tenant': 'TENANT2222',
-            'disabled': False,
-            'info': {
-                'name': 'REPORT2222',
-                'description': 'Report containing all endpoints',
-                'created': '2022-07-27 10:03:12',
-                'updated': '2022-07-27 10:03:12'
-            },
-            'computations': {
-                'ar': True,
-                'status': True,
-                'trends': [
-                    'flapping',
-                    'status',
-                    'tags'
+        'data': [
+            {
+                'id': 'xxxxxx',
+                'tenant': 'TENANT1111',
+                'disabled': False,
+                'info': {
+                    'name': 'REPORT1111',
+                    'description': 'Report for SLA service groups',
+                    'created': '2019-01-25 13:51:40',
+                    'updated': '2022-02-10 14:27:51'
+                },
+                'computations': {
+                    'ar': True,
+                    'status': True,
+                    'trends': [
+                        'flapping',
+                        'status',
+                        'tags'
+                    ]
+                },
+                'thresholds': {
+                    'availability': 80,
+                    'reliability': 85,
+                    'uptime': 0.8,
+                    'unknown': 0.1,
+                    'downtime': 0.1
+                },
+                'topology_schema': {
+                    'group': {
+                        'type': 'PROJECT',
+                        'group': {
+                            'type': 'SERVICEGROUPS1111'
+                        }
+                    }
+                },
+                'profiles': [
+                    {
+                        'id': 'xxxxx',
+                        'name': 'ARGO_MON_CRITICAL',
+                        'type': 'metric'
+                    },
+                    {
+                        'id': 'xxxxx',
+                        'name': 'sla_test',
+                        'type': 'aggregation'
+                    },
+                    {
+                        'id': 'xxxxx',
+                        'name': 'ops',
+                        'type': 'operations'
+                    }
+                ],
+                'filter_tags': [
+                    {
+                        'name': 'production',
+                        'value': '1',
+                        'context': 'argo.endpoint.filter.tags'
+                    },
+                    {
+                        'name': 'monitored',
+                        'value': '1',
+                        'context': 'argo.endpoint.filter.tags'
+                    },
+                    {
+                        'name': 'scope',
+                        'value': 'SLA',
+                        'context': 'argo.group.filter.tags.array'
+                    }
                 ]
             },
-            'thresholds': {
-                'availability': 80,
-                'reliability': 85,
-                'uptime': 0.8,
-                'unknown': 0.1,
-                'downtime': 0.1
-            },
-            'topology_schema': {
-                'group': {
-                    'type': 'NGI',
+            {
+                'id': 'xxxxx',
+                'tenant': 'TENANT2222',
+                'disabled': False,
+                'info': {
+                    'name': 'REPORT2222',
+                    'description': 'Report containing all endpoints',
+                    'created': '2022-07-27 10:03:12',
+                    'updated': '2022-07-27 10:03:12'
+                },
+                'computations': {
+                    'ar': True,
+                    'status': True,
+                    'trends': [
+                        'flapping',
+                        'status',
+                        'tags'
+                    ]
+                },
+                'thresholds': {
+                    'availability': 80,
+                    'reliability': 85,
+                    'uptime': 0.8,
+                    'unknown': 0.1,
+                    'downtime': 0.1
+                },
+                'topology_schema': {
                     'group': {
-                        'type': 'SERVICEGROUPS2222'
+                        'type': 'NGI',
+                        'group': {
+                            'type': 'SERVICEGROUPS2222'
+                        }
                     }
-                }
-            },
-            'profiles': [
-                {
-                    'id': 'xxxxxxxx',
-                    'name': 'ARGO_MON',
-                    'type': 'metric'
                 },
-                {
-                    'id': 'xxxxxxxx',
-                    'name': 'argo-mon-full',
-                    'type': 'aggregation'
-                },
-                {
-                    'id': 'xxxxxxxxxx',
-                    'name': 'egi_ops',
-                    'type': 'operations'
-                }
-            ],
-            'filter_tags': [
-                {
-                    'name': 'certification',
-                    'value': 'Certified',
-                    'context': 'argo.group.filter.tags.array'
-                },
-                {
-                    'name': 'infrastructure',
-                    'value': 'Production',
-                    'context': 'argo.group.filter.tags.array'
-                },
-                {
-                    'name': 'scope',
-                    'value': 'EGI',
-                    'context': 'argo.group.filter.tags.array'
-                },
-                {
-                    'name': 'monitored',
-                    'value': '1',
-                    'context': 'argo.endpoint.filter.tags'
-                },
-                {
-                    'name': 'scope',
-                    'value': 'EGI',
-                    'context': 'argo.endpoint.filter.tags.array'
-                }
-            ]
-        },
-        {
-            'id': 'xxxxxxxxxx',
-            'tenant': 'TENANT3333',
-            'disabled': False,
-            'info': {
-                'name': 'REPORT3333',
-                'description': 'EGI Critical Report',
-                'created': '2018-03-09 14:57:02',
-                'updated': '2022-02-10 14:32:31'
-            },
-            'computations': {
-                'ar': True,
-                'status': True,
-                'trends': [
-                    'flapping',
-                    'status',
-                    'tags'
+                'profiles': [
+                    {
+                        'id': 'xxxxxxxx',
+                        'name': 'ARGO_MON',
+                        'type': 'metric'
+                    },
+                    {
+                        'id': 'xxxxxxxx',
+                        'name': 'argo-mon-full',
+                        'type': 'aggregation'
+                    },
+                    {
+                        'id': 'xxxxxxxxxx',
+                        'name': 'egi_ops',
+                        'type': 'operations'
+                    }
+                ],
+                'filter_tags': [
+                    {
+                        'name': 'certification',
+                        'value': 'Certified',
+                        'context': 'argo.group.filter.tags.array'
+                    },
+                    {
+                        'name': 'infrastructure',
+                        'value': 'Production',
+                        'context': 'argo.group.filter.tags.array'
+                    },
+                    {
+                        'name': 'scope',
+                        'value': 'EGI',
+                        'context': 'argo.group.filter.tags.array'
+                    },
+                    {
+                        'name': 'monitored',
+                        'value': '1',
+                        'context': 'argo.endpoint.filter.tags'
+                    },
+                    {
+                        'name': 'scope',
+                        'value': 'EGI',
+                        'context': 'argo.endpoint.filter.tags.array'
+                    }
                 ]
             },
-            'thresholds': {
-                'availability': 80,
-                'reliability': 85,
-                'uptime': 0.8,
-                'unknown': 0.1,
-                'downtime': 0.1
-            },
-            'topology_schema': {
-                'group': {
-                    'type': 'NGI',
+            {
+                'id': 'xxxxxxxxxx',
+                'tenant': 'TENANT3333',
+                'disabled': False,
+                'info': {
+                    'name': 'REPORT3333',
+                    'description': 'EGI Critical Report',
+                    'created': '2018-03-09 14:57:02',
+                    'updated': '2022-02-10 14:32:31'
+                },
+                'computations': {
+                    'ar': True,
+                    'status': True,
+                    'trends': [
+                        'flapping',
+                        'status',
+                        'tags'
+                    ]
+                },
+                'thresholds': {
+                    'availability': 80,
+                    'reliability': 85,
+                    'uptime': 0.8,
+                    'unknown': 0.1,
+                    'downtime': 0.1
+                },
+                'topology_schema': {
                     'group': {
-                        'type': 'SERVICEGROUPS3333'
+                        'type': 'NGI',
+                        'group': {
+                            'type': 'SERVICEGROUPS3333'
+                        }
                     }
-                }
-            },
-            'profiles': [
-                {
-                    'id': 'xxxxxxxxxx',
-                    'name': 'ARGO_MON_CRITICAL',
-                    'type': 'metric'
                 },
-                {
-                    'id': 'xxxxxxxxxxxxxxxx',
-                    'name': 'egi_ops',
-                    'type': 'operations'
-                },
-                {
-                    'id': 'xxxxxxxxxxxx',
-                    'name': 'critical',
-                    'type': 'aggregation'
-                }
-            ],
-            'filter_tags': [
-                {
-                    'name': 'certification',
-                    'value': 'Certified',
-                    'context': 'argo.group.filter.tags.array'
-                },
-                {
-                    'name': 'infrastructure',
-                    'value': 'Production',
-                    'context': 'argo.group.filter.tags.array'
-                },
-                {
-                    'name': 'scope',
-                    'value': 'EGI',
-                    'context': 'argo.group.filter.tags.array'
-                },
-                {
-                    'name': 'production',
-                    'value': '1',
-                    'context': 'argo.endpoint.filter.tags'
-                },
-                {
-                    'name': 'monitored',
-                    'value': '1',
-                    'context': 'argo.endpoint.filter.tags'
-                },
-                {
-                    'name': 'scope',
-                    'value': 'EGI',
-                    'context': 'argo.endpoint.filter.tags.array'
-                }
-            ]
-        },
-        {
-            'id': 'xxxxxxxxxxxxxxxxxxx',
-            'tenant': 'TENANT4444',
-            'disabled': False,
-            'info': {
-                'name': 'REPORT4444',
-                'description': 'EGI Report for Uncertified Sites',
-                'created': '2019-03-07 15:32:17',
-                'updated': '2022-02-10 14:37:48'
-            },
-            'computations': {
-                'ar': True,
-                'status': True,
-                'trends': [
-                    'flapping',
-                    'status',
-                    'tags'
+                'profiles': [
+                    {
+                        'id': 'xxxxxxxxxx',
+                        'name': 'ARGO_MON_CRITICAL',
+                        'type': 'metric'
+                    },
+                    {
+                        'id': 'xxxxxxxxxxxxxxxx',
+                        'name': 'egi_ops',
+                        'type': 'operations'
+                    },
+                    {
+                        'id': 'xxxxxxxxxxxx',
+                        'name': 'critical',
+                        'type': 'aggregation'
+                    }
+                ],
+                'filter_tags': [
+                    {
+                        'name': 'certification',
+                        'value': 'Certified',
+                        'context': 'argo.group.filter.tags.array'
+                    },
+                    {
+                        'name': 'infrastructure',
+                        'value': 'Production',
+                        'context': 'argo.group.filter.tags.array'
+                    },
+                    {
+                        'name': 'scope',
+                        'value': 'EGI',
+                        'context': 'argo.group.filter.tags.array'
+                    },
+                    {
+                        'name': 'production',
+                        'value': '1',
+                        'context': 'argo.endpoint.filter.tags'
+                    },
+                    {
+                        'name': 'monitored',
+                        'value': '1',
+                        'context': 'argo.endpoint.filter.tags'
+                    },
+                    {
+                        'name': 'scope',
+                        'value': 'EGI',
+                        'context': 'argo.endpoint.filter.tags.array'
+                    }
                 ]
             },
-            'thresholds': {
-                'availability': 80,
-                'reliability': 85,
-                'uptime': 0.8,
-                'unknown': 0.1,
-                'downtime': 0.1
-            },
-            'topology_schema': {
-                'group': {
-                    'type': 'NGI',
+            {
+                'id': 'xxxxxxxxxxxxxxxxxxx',
+                'tenant': 'TENANT4444',
+                'disabled': False,
+                'info': {
+                    'name': 'REPORT4444',
+                    'description': 'EGI Report for Uncertified Sites',
+                    'created': '2019-03-07 15:32:17',
+                    'updated': '2022-02-10 14:37:48'
+                },
+                'computations': {
+                    'ar': True,
+                    'status': True,
+                    'trends': [
+                        'flapping',
+                        'status',
+                        'tags'
+                    ]
+                },
+                'thresholds': {
+                    'availability': 80,
+                    'reliability': 85,
+                    'uptime': 0.8,
+                    'unknown': 0.1,
+                    'downtime': 0.1
+                },
+                'topology_schema': {
                     'group': {
-                        'type': 'SERVICEGROUPS4444'
+                        'type': 'NGI',
+                        'group': {
+                            'type': 'SERVICEGROUPS4444'
+                        }
                     }
-                }
-            },
-            'profiles': [
-                {
-                    'id': 'XXXXXXXXXXX',
-                    'name': 'ARGO_MON_CRITICAL',
-                    'type': 'metric'
                 },
-                {
-                    'id': 'XXXXXXXXXXXXXXX',
-                    'name': 'egi_ops',
-                    'type': 'operations'
-                },
-                {
-                    'id': 'XXXXXXXXXXXXXX',
-                    'name': 'critical',
-                    'type': 'aggregation'
-                }
-            ],
-            'filter_tags': [
-                {
-                    'name': 'certification',
-                    'value': 'Uncertified',
-                    'context': 'argo.group.filter.tags'
-                },
-                {
-                    'name': 'scope',
-                    'value': 'EGI',
-                    'context': 'argo.group.filter.tags.array'
-                },
-                {
-                    'name': 'production',
-                    'value': '1',
-                    'context': 'argo.endpoint.filter.tags'
-                },
-                {
-                    'name': 'monitored',
-                    'value': '1',
-                    'context': 'argo.endpoint.filter.tags'
-                },
-                {
-                    'name': 'scope',
-                    'value': 'EGI',
-                    'context': 'argo.endpoint.filter.tags.array'
-                }
-            ]
-        },
-        {
-            'id': 'XXXXXXXXXXXXXXX',
-            'tenant': 'TENANT5555',
-            'disabled': False,
-            'info': {
-                'name': 'REPORT5555',
-                'description': 'EGI report for Ops Monitoring Critical',
-                'created': '2018-03-09 15:28:02',
-                'updated': '2022-02-10 15:02:35'
-            },
-            'computations': {
-                'ar': True,
-                'status': True,
-                'trends': [
-                    'flapping',
-                    'status',
-                    'tags'
+                'profiles': [
+                    {
+                        'id': 'XXXXXXXXXXX',
+                        'name': 'ARGO_MON_CRITICAL',
+                        'type': 'metric'
+                    },
+                    {
+                        'id': 'XXXXXXXXXXXXXXX',
+                        'name': 'egi_ops',
+                        'type': 'operations'
+                    },
+                    {
+                        'id': 'XXXXXXXXXXXXXX',
+                        'name': 'critical',
+                        'type': 'aggregation'
+                    }
+                ],
+                'filter_tags': [
+                    {
+                        'name': 'certification',
+                        'value': 'Uncertified',
+                        'context': 'argo.group.filter.tags'
+                    },
+                    {
+                        'name': 'scope',
+                        'value': 'EGI',
+                        'context': 'argo.group.filter.tags.array'
+                    },
+                    {
+                        'name': 'production',
+                        'value': '1',
+                        'context': 'argo.endpoint.filter.tags'
+                    },
+                    {
+                        'name': 'monitored',
+                        'value': '1',
+                        'context': 'argo.endpoint.filter.tags'
+                    },
+                    {
+                        'name': 'scope',
+                        'value': 'EGI',
+                        'context': 'argo.endpoint.filter.tags.array'
+                    }
                 ]
             },
-            'thresholds': {
-                'availability': 80,
-                'reliability': 85,
-                'uptime': 0.8,
-                'unknown': 0.1,
-                'downtime': 0.1
-            },
-            'topology_schema': {
-                'group': {
-                    'type': 'NGI',
+            {
+                'id': 'XXXXXXXXXXXXXXX',
+                'tenant': 'TENANT5555',
+                'disabled': False,
+                'info': {
+                    'name': 'REPORT5555',
+                    'description': 'EGI report for Ops Monitoring Critical',
+                    'created': '2018-03-09 15:28:02',
+                    'updated': '2022-02-10 15:02:35'
+                },
+                'computations': {
+                    'ar': True,
+                    'status': True,
+                    'trends': [
+                        'flapping',
+                        'status',
+                        'tags'
+                    ]
+                },
+                'thresholds': {
+                    'availability': 80,
+                    'reliability': 85,
+                    'uptime': 0.8,
+                    'unknown': 0.1,
+                    'downtime': 0.1
+                },
+                'topology_schema': {
                     'group': {
-                        'type': 'SERVICEGROUPS5555'
+                        'type': 'NGI',
+                        'group': {
+                            'type': 'SERVICEGROUPS5555'
+                        }
                     }
-                }
-            },
-            'profiles': [
-                {
-                    'id': 'XXXXXXXXXXXXXXXXXXXXXXXXXX',
-                    'name': 'OPS_MONITOR_CRITICAL',
-                    'type': 'metric'
                 },
-                {
-                    'id': 'XXXXXXXXXXXXXXXXXXXXX',
-                    'name': 'egi_ops',
-                    'type': 'operations'
-                },
-                {
-                    'id': 'XXXXXXXXXXXXXXX',
-                    'name': 'ops-mon-critical',
-                    'type': 'aggregation'
-                }
-            ],
-            'filter_tags': [
-                {
-                    'name': 'certification',
-                    'value': 'Certified',
-                    'context': 'argo.group.filter.tags.array'
-                },
-                {
-                    'name': 'infrastructure',
-                    'value': 'Production',
-                    'context': 'argo.group.filter.tags.array'
-                },
-                {
-                    'name': 'scope',
-                    'value': 'EGICore',
-                    'context': 'argo.group.filter.tags.array'
-                },
-                {
-                    'name': 'monitored',
-                    'value': '1',
-                    'context': 'argo.endpoint.filter.tags'
-                },
-                {
-                    'name': 'production',
-                    'value': '1',
-                    'context': 'argo.endpoint.filter.tags'
-                }
-            ]
-        }
-    ]
-}
+                'profiles': [
+                    {
+                        'id': 'XXXXXXXXXXXXXXXXXXXXXXXXXX',
+                        'name': 'OPS_MONITOR_CRITICAL',
+                        'type': 'metric'
+                    },
+                    {
+                        'id': 'XXXXXXXXXXXXXXXXXXXXX',
+                        'name': 'egi_ops',
+                        'type': 'operations'
+                    },
+                    {
+                        'id': 'XXXXXXXXXXXXXXX',
+                        'name': 'ops-mon-critical',
+                        'type': 'aggregation'
+                    }
+                ],
+                'filter_tags': [
+                    {
+                        'name': 'certification',
+                        'value': 'Certified',
+                        'context': 'argo.group.filter.tags.array'
+                    },
+                    {
+                        'name': 'infrastructure',
+                        'value': 'Production',
+                        'context': 'argo.group.filter.tags.array'
+                    },
+                    {
+                        'name': 'scope',
+                        'value': 'EGICore',
+                        'context': 'argo.group.filter.tags.array'
+                    },
+                    {
+                        'name': 'monitored',
+                        'value': '1',
+                        'context': 'argo.endpoint.filter.tags'
+                    },
+                    {
+                        'name': 'production',
+                        'value': '1',
+                        'context': 'argo.endpoint.filter.tags'
+                    }
+                ]
+            }
+        ]
+    }
+]
 
 mock_check_ar_results = {
     'results': [
@@ -657,11 +659,14 @@ def mock_check_status_result(*args, **kwargs):
     )
 
 
+# TODO: NE ZABORAVI POGLEDATI ISPRAVLJENO OD DANIJELA ZA WEBAPI
+# TODO: POCISTI GLAVNI WEBAPI KOD
+
 @freeze_time("1999-10-1")
 class ArgoProbeWebApiTests(unittest.TestCase):
     def setUp(self) -> None:
-        arguments = {"tenant": "mock-tenanat", "token": "1234", "hostname": "mock_hostname",
-                     "timeout": 5, "rtype": 'status', "day": 1, "unusedreports": 0, "debug": ""}
+        arguments = {"tenant_token": [["mock_tenant:1234"]], "hostname": "mock_hostname",
+                     "timeout": 5, "rtype": 'status', "day": 1, "debug": 0}
 
         self.arguments = SimpleNamespace(**arguments)
 
@@ -674,13 +679,13 @@ class ArgoProbeWebApiTests(unittest.TestCase):
         mock_request.assert_called_once_with("https://mock_hostname/api/v2/reports", headers={
                                              'Accept': 'application/json', 'x-api-key': '1234'}, timeout=5)
 
-        self.assertEqual(apiCallUrl, {
+        self.assertEqual(apiCallUrl, [{
             "status": {
                 "message": "Success",
                 "code": 200,
             },
             "data": [mock_reports[0]]
-        })
+        }])
 
     @patch("builtins.print")
     @patch("argo_probe_webapi.web_api.requests.get")
@@ -731,13 +736,13 @@ class ArgoProbeWebApiTests(unittest.TestCase):
 
         mock_request.assert_has_calls(calls, any_order=True)
 
-        actual = {
-            'REPORT1111': 'OK - Availability for REPORT1111 is OK',
-            'REPORT2222': 'OK - Availability for REPORT2222 is OK',
-            'REPORT3333': 'OK - Availability for REPORT3333 is OK',
-            'REPORT4444': 'OK - Availability for REPORT4444 is OK',
-            'REPORT5555': 'OK - Availability for REPORT5555 is OK'
-        }, ''
+        actual = ([[
+            'OK - Availability for REPORT1111 is OK',
+            'OK - Availability for REPORT2222 is OK',
+            'OK - Availability for REPORT3333 is OK',
+            'OK - Availability for REPORT4444 is OK',
+            'OK - Availability for REPORT5555 is OK'
+        ]])
 
         self.assertEqual(expected, actual)
 
@@ -763,22 +768,23 @@ class ArgoProbeWebApiTests(unittest.TestCase):
 
         mock_request.assert_has_calls(calls, any_order=True)
 
-        actual = {
-            'ConnectionREPORT1111': 'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/results/REPORT1111/SERVICEGROUPS1111)',
-            'StatusREPORT1111': 'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/results/REPORT1111/SERVICEGROUPS1111)',
-            'REPORT1111': 'CRITICAL - cannot retrieve availability from REPORT1111',
-            'ConnectionREPORT2222': 'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/results/REPORT2222/SERVICEGROUPS2222)',
-            'StatusREPORT2222': 'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/results/REPORT2222/SERVICEGROUPS2222)',
-            'REPORT2222': 'CRITICAL - cannot retrieve availability from REPORT2222',
-            'ConnectionREPORT3333': 'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/results/REPORT3333/SERVICEGROUPS3333)',
-            'StatusREPORT3333': 'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/results/REPORT3333/SERVICEGROUPS3333)',
-            'REPORT3333': 'CRITICAL - cannot retrieve availability from REPORT3333',
-            'ConnectionREPORT4444': 'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/results/REPORT4444/SERVICEGROUPS4444)',
-            'StatusREPORT4444': 'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/results/REPORT4444/SERVICEGROUPS4444)',
-            'REPORT4444': 'CRITICAL - cannot retrieve availability from REPORT4444',
-            'ConnectionREPORT5555': 'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/results/REPORT5555/SERVICEGROUPS5555)',
-            'StatusREPORT5555': 'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/results/REPORT5555/SERVICEGROUPS5555)',
-            'REPORT5555': 'CRITICAL - cannot retrieve availability from REPORT5555'}, ''
+        actual = [[
+            'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/results/REPORT1111/SERVICEGROUPS1111)',
+            'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/results/REPORT1111/SERVICEGROUPS1111)',
+            'CRITICAL - cannot retrieve availability from REPORT1111',
+            'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/results/REPORT2222/SERVICEGROUPS2222)',
+            'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/results/REPORT2222/SERVICEGROUPS2222)',
+            'CRITICAL - cannot retrieve availability from REPORT2222',
+            'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/results/REPORT3333/SERVICEGROUPS3333)',
+            'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/results/REPORT3333/SERVICEGROUPS3333)',
+            'CRITICAL - cannot retrieve availability from REPORT3333',
+            'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/results/REPORT4444/SERVICEGROUPS4444)',
+            'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/results/REPORT4444/SERVICEGROUPS4444)',
+            'CRITICAL - cannot retrieve availability from REPORT4444',
+            'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/results/REPORT5555/SERVICEGROUPS5555)',
+            'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/results/REPORT5555/SERVICEGROUPS5555)',
+            'CRITICAL - cannot retrieve availability from REPORT5555'
+        ]]
 
         self.assertEqual(expected, actual)
 
@@ -804,13 +810,13 @@ class ArgoProbeWebApiTests(unittest.TestCase):
 
         mock_request.assert_has_calls(calls, any_order=True)
 
-        actual = {
-            'REPORT1111': 'OK - status for REPORT1111 is OK',
-            'REPORT2222': 'OK - status for REPORT2222 is OK',
-            'REPORT3333': 'OK - status for REPORT3333 is OK',
-            'REPORT4444': 'OK - status for REPORT4444 is OK',
-            'REPORT5555': 'OK - status for REPORT5555 is OK'
-        }, ''
+        actual = [[
+            'OK - status for REPORT1111 is OK',
+            'OK - status for REPORT2222 is OK',
+            'OK - status for REPORT3333 is OK',
+            'OK - status for REPORT4444 is OK',
+            'OK - status for REPORT5555 is OK'
+        ]]
 
         self.assertEqual(expected, actual)
 
@@ -836,22 +842,22 @@ class ArgoProbeWebApiTests(unittest.TestCase):
 
         mock_request.assert_has_calls(calls, any_order=True)
 
-        actual = {
-            'ConnectionREPORT1111': 'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/status/REPORT1111/SERVICEGROUPS1111)',
-            'StatusREPORT1111': 'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/status/REPORT1111/SERVICEGROUPS1111)',
-            'REPORT1111': 'CRITICAL - cannot retrieve status from REPORT1111',
-            'ConnectionREPORT2222': 'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/status/REPORT2222/SERVICEGROUPS2222)',
-            'StatusREPORT2222': 'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/status/REPORT2222/SERVICEGROUPS2222)',
-            'REPORT2222': 'CRITICAL - cannot retrieve status from REPORT2222',
-            'ConnectionREPORT3333': 'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/status/REPORT3333/SERVICEGROUPS3333)',
-            'StatusREPORT3333': 'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/status/REPORT3333/SERVICEGROUPS3333)',
-            'REPORT3333': 'CRITICAL - cannot retrieve status from REPORT3333',
-            'ConnectionREPORT4444': 'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/status/REPORT4444/SERVICEGROUPS4444)',
-            'StatusREPORT4444': 'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/status/REPORT4444/SERVICEGROUPS4444)',
-            'REPORT4444': 'CRITICAL - cannot retrieve status from REPORT4444',
-            'ConnectionREPORT5555': 'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/status/REPORT5555/SERVICEGROUPS5555)',
-            'StatusREPORT5555': 'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/status/REPORT5555/SERVICEGROUPS5555)',
-            'REPORT5555': 'CRITICAL - cannot retrieve status from REPORT5555'}, ''
+        actual = [[
+            'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/status/REPORT1111/SERVICEGROUPS1111)',
+            'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/status/REPORT1111/SERVICEGROUPS1111)',
+            'CRITICAL - cannot retrieve status from REPORT1111',
+            'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/status/REPORT2222/SERVICEGROUPS2222)',
+            'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/status/REPORT2222/SERVICEGROUPS2222)',
+            'CRITICAL - cannot retrieve status from REPORT2222',
+            'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/status/REPORT3333/SERVICEGROUPS3333)',
+            'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/status/REPORT3333/SERVICEGROUPS3333)',
+            'CRITICAL - cannot retrieve status from REPORT3333',
+            'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/status/REPORT4444/SERVICEGROUPS4444)',
+            'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/status/REPORT4444/SERVICEGROUPS4444)',
+            'CRITICAL - cannot retrieve status from REPORT4444',
+            'CRITICAL - Reports cannot connect to (https://mock_hostname/api/v2/status/REPORT5555/SERVICEGROUPS5555)',
+            'CRITICAL - Status code error. Cannot connect to (https://mock_hostname/api/v2/status/REPORT5555/SERVICEGROUPS5555)',
+            'CRITICAL - cannot retrieve status from REPORT5555']]
 
         self.assertEqual(expected, actual)
 
@@ -869,7 +875,6 @@ class ArgoProbeWebApiTests(unittest.TestCase):
 
         calls = [
             call("CRITICAL: wrong value at argument rtype. rtype must be ar or status"),
-            call("Description: ")
         ]
 
         mock_print.assert_has_calls(calls)
@@ -879,17 +884,16 @@ class ArgoProbeWebApiTests(unittest.TestCase):
     def test_utils_systemexit_with_0(self, mock_print):
 
         with self.assertRaises(SystemExit) as e:
-            utils(self.arguments, {
-                'SLA': 'OK - Availability for SLA is OK',
-                'ALL': 'OK - Availability for ALL is OK',
-                'Critical': 'OK - Availability for Critical is OK',
-                'CriticalUncert': 'OK - Availability for CriticalUncert is OK',
-                'OPS-MONITOR-Critical': 'OK - Availability for OPS-MONITOR-Critical is OK'})
+            utils(self.arguments, [[
+                'OK - Availability for SLA is OK',
+                'OK - Availability for ALL is OK',
+                'OK - Availability for Critical is OK',
+                'OK - Availability for CriticalUncert is OK',
+                'OK - Availability for OPS-MONITOR-Critical is OK'
+            ]])
 
         calls = [
-            call(
-                f'Ok - All {self.arguments.rtype} reports for tenant mock-tenanat return results'),
-            call('Description: OK - Availability for SLA is OK\nOK - Availability for ALL is OK\nOK - Availability for Critical is OK\nOK - Availability for CriticalUncert is OK\nOK - Availability for OPS-MONITOR-Critical is OK\n')
+            call('Ok - STATUS reports for all tenant/-s return results')
         ]
 
         mock_print.assert_has_calls(calls)
@@ -897,18 +901,19 @@ class ArgoProbeWebApiTests(unittest.TestCase):
 
     @patch('builtins.print')
     def test_utils_systemexit_with_1(self, mock_print):
+        tenant = self.arguments.tenant_token[0][0].split(":")[0]
 
         with self.assertRaises(SystemExit) as e:
-            utils(self.arguments, {
-                'SLA': 'WARNING - Availability for SLA is OK',
-                'ALL': 'WARNING - Availability for ALL is OK',
-                'Critical': 'WARNING - Availability for Critical is OK',
-                'CriticalUncert': 'WARNING - Availability for CriticalUncert is OK',
-                'OPS-MONITOR-Critical': 'WARNING - Availability for OPS-MONITOR-Critical is OK'})
-
+            utils(self.arguments, [[
+                'WARNING - Availability for SLA is OK',
+                'WARNING - Availability for ALL is OK',
+                'WARNING - Availability for Critical is OK',
+                'WARNING - Availability for CriticalUncert is OK',
+                'WARNING - Availability for OPS-MONITOR-Critical is OK'
+            ]])
         calls = [
-            call('SystemExit(1)'),
-            call('Description: WARNING - Availability for SLA is OK\nWARNING - Availability for ALL is OK\nWARNING - Availability for Critical is OK\nWARNING - Availability for CriticalUncert is OK\nWARNING - Availability for OPS-MONITOR-Critical is OK\n')
+            call(
+                f'WARNING - Problem with {self.arguments.rtype} reports for tenant {tenant} return results')
         ]
 
         mock_print.assert_has_calls(calls)
@@ -916,19 +921,20 @@ class ArgoProbeWebApiTests(unittest.TestCase):
 
     @patch('builtins.print')
     def test_utils_systemexit_with_2(self, mock_print):
+        tenant = self.arguments.tenant_token[0][0].split(":")[0]
 
         with self.assertRaises(SystemExit) as e:
-            utils(self.arguments, {
-                'SLA': 'CRITICAL - Availability for SLA is OK',
-                'ALL': 'CRITICAL - Availability for ALL is OK',
-                'Critical': 'CRITICAL - Availability for Critical is OK',
-                'CriticalUncert': 'CRITICAL - Availability for CriticalUncert is OK',
-                'OPS-MONITOR-Critical': 'CRITICAL - Availability for OPS-MONITOR-Critical is OK'})
+            utils(self.arguments, [[
+                'CRITICAL - Availability for SLA is OK',
+                'CRITICAL - Availability for ALL is OK',
+                'CRITICAL - Availability for Critical is OK',
+                'CRITICAL - Availability for CriticalUncert is OK',
+                'CRITICAL - Availability for OPS-MONITOR-Critical is OK'
+            ]])
 
         calls = [
             call(
-                f'CRITICAL - Problem with {self.arguments.rtype} reports for tenant {self.arguments.tenant} return results'),
-            call('Description: CRITICAL - Availability for SLA is OK\nCRITICAL - Availability for ALL is OK\nCRITICAL - Availability for Critical is OK\nCRITICAL - Availability for CriticalUncert is OK\nCRITICAL - Availability for OPS-MONITOR-Critical is OK\n')
+                f'CRITICAL - Problem with {self.arguments.rtype} reports for tenant {tenant} return results'),
         ]
 
         mock_print.assert_has_calls(calls)
