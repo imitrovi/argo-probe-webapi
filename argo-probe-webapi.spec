@@ -2,17 +2,17 @@
 %define dir /usr/libexec/argo/probes/webapi
 %global __python %{python3}
 
-
-Name: argo-probe-webapi
-Summary: Probe checking ARGO WEB-API component.
-Version: 0.1.0
-Release: 1%{?dist}
-License: ASL 2.0
-Source0: %{name}-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-Group: Network/Monitoring
-BuildArch: noarch
-Requires: python-requests, python-argparse
+Name:          argo-probe-webapi
+Summary:       Probe checking ARGO WEB-API component.
+Version:       0.1.0
+Release:       1%{?dist}
+License:       ASL 2.0
+Source0:       %{name}-%{version}.tar.gz
+BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root
+Group:         Network/Monitoring
+BuildArch:     noarch
+BuildRequires: python3-devel
+Requires:      python36-requests
 
 %description
 This package includes probe that checks ARGO WEB-API.
