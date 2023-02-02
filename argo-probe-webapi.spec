@@ -4,7 +4,7 @@
 
 Name:          argo-probe-webapi
 Summary:       Probe checking ARGO WEB-API component.
-Version:       0.1.0
+Version:       0.1.1
 Release:       1%{?dist}
 License:       ASL 2.0
 Source0:       %{name}-%{version}.tar.gz
