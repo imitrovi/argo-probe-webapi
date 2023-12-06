@@ -171,7 +171,6 @@ def utils(arguments, output_dict):
             for item in output_dict[i]:
 
                 if "CRITICAL" in item:
-                    print("item: ", item)
                     if "cannot retrieve" in item:
                         fail_report = item.split()[-1]
                         msgs_not_ok += f'CRITICAL - Problem with {arguments.rtype} report {fail_report} for tenant {tenant}' + \
