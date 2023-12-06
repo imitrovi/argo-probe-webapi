@@ -155,10 +155,11 @@ def utils(arguments, output_dict):
     NAGIOS_RESULT = 0
     msgs_ok = f'Ok - {(arguments.rtype).upper()} reports for all tenant/-s return results'
     msgs_not_ok = ""
+    msg_final = ""
 
     for i in range(len(arguments.tenant_token)):
         tenant = arguments.tenant_token[i][0].split(":")[0]
-
+        msg = ""
         Description = ""
         if arguments.rtype not in ('status', 'ar'):
             msgs_not_ok += "CRITICAL: wrong value at argument rtype. rtype must be ar or status" \
@@ -170,11 +171,14 @@ def utils(arguments, output_dict):
             for item in output_dict[i]:
 
                 if "CRITICAL" in item:
-                    msgs_not_ok += f'CRITICAL - Problem with {arguments.rtype} reports for tenant {tenant} return results' + \
-                        " / " if f'CRITICAL - Problem with {arguments.rtype} reports for tenant {tenant} return results' not in msgs_not_ok else ""
-                    msg = f'CRITICAL - Problem with {arguments.rtype} reports for tenant {tenant} return results'
-                    if NAGIOS_RESULT < 2:
-                        NAGIOS_RESULT = 2
+                    print("item: ", item)
+                    if "cannot retrieve" in item:
+                        fail_report = item.split()[-1]
+                        msgs_not_ok += f'CRITICAL - Problem with {arguments.rtype} report {fail_report} for tenant {tenant}' + \
+                            " / " if f'CRITICAL - Problem with {arguments.rtype} reports for tenant {tenant} return results' not in msgs_not_ok else ""
+                        msg = f'CRITICAL - Problem with {arguments.rtype} reports for tenant {tenant} return results'
+                        if NAGIOS_RESULT < 2:
+                            NAGIOS_RESULT = 2
                 elif "WARNING" in item:
                     msgs_not_ok += f'WARNING - Problem with {arguments.rtype} reports for tenant {tenant} return results' + \
                         " / " if f'WARNING - Problem with {arguments.rtype} reports for tenant {tenant} return results' not in msgs_not_ok else ""
@@ -185,14 +189,18 @@ def utils(arguments, output_dict):
                     msg = f'Ok - All {arguments.rtype} reports for tenant {tenant} return results'
                     if NAGIOS_RESULT <= 0:
                         NAGIOS_RESULT = 0
-
+          
                 Description += item + "\n"
 
-        if arguments.debug > 0:
-            print(msg)
-            print(f"Description: {Description}")
-
+        msg_final += msg + "\n"
+        msg_final += f"Description: {Description}" + "\n"
+    
     print(msgs_ok if msgs_not_ok == "" else msgs_not_ok.rstrip(" / "))
+    print("\n")
+    
+    if arguments.debug > 0:
+        print(msg_final)
+    
     raise SystemExit(NAGIOS_RESULT)
 
 
