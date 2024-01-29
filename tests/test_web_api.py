@@ -902,7 +902,6 @@ class ArgoProbeWebApiTests(unittest.TestCase):
     @patch('builtins.print')
     def test_utils_systemexit_with_1(self, mock_print):
         tenant = self.arguments.tenant_token[0][0].split(":")[0]
-
         with self.assertRaises(SystemExit) as e:
             utils(self.arguments, [[
                 'WARNING - Availability for SLA is OK',
@@ -922,19 +921,15 @@ class ArgoProbeWebApiTests(unittest.TestCase):
     @patch('builtins.print')
     def test_utils_systemexit_with_2(self, mock_print):
         tenant = self.arguments.tenant_token[0][0].split(":")[0]
-
+        fail_report = "Critical"
         with self.assertRaises(SystemExit) as e:
             utils(self.arguments, [[
-                'CRITICAL - Availability for SLA is OK',
-                'CRITICAL - Availability for ALL is OK',
-                'CRITICAL - Availability for Critical is OK',
-                'CRITICAL - Availability for CriticalUncert is OK',
-                'CRITICAL - Availability for OPS-MONITOR-Critical is OK'
+                'CRITICAL - cannot retrieve status from Critical'
             ]])
 
         calls = [
             call(
-                f'CRITICAL - Problem with {self.arguments.rtype} reports for tenant {tenant} return results'),
+                f'CRITICAL - Problem with {self.arguments.rtype} report {fail_report} for tenant {tenant}'),
         ]
 
         mock_print.assert_has_calls(calls)
