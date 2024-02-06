@@ -31,7 +31,6 @@ class WebAPIReports:
 
     def _get_reports(self):
         reports = dict()
-        exceptions = dict()
         for tenant, token in self.tenant_tokens.items():
             try:
                 response = requests.get(
@@ -41,21 +40,28 @@ class WebAPIReports:
                 )
                 response.raise_for_status()
 
-                reports.update({tenant: [
-                    report for report in response.json()["data"] if
-                    report["disabled"] is False
-                ]})
+                reports.update({tenant: {
+                    "data": [
+                        report for report in response.json()["data"] if
+                        report["disabled"] is False
+                    ]
+                }})
 
             except (
                 requests.exceptions.RequestException,
                 requests.exceptions.HTTPError
             ) as e:
-                exceptions.update({tenant: str(e)})
+                reports.update({
+                    tenant: {
+                        "exception": f"CRITICAL - Error fetching reports for "
+                                     f"tenant {tenant}: {str(e)}"
+                    }
+                })
 
-        return reports, exceptions
+        return reports
 
     def check(self):
-        reports, reports_exceptions = self._get_reports()
+        reports = self._get_reports()
 
         check_results = dict()
         for tenant, tenants_reports in reports.items():
@@ -68,68 +74,77 @@ class WebAPIReports:
 
             date_considered = get_today() - datetime.timedelta(days=self.day)
 
-            for report in tenants_reports:
-                name = report["info"]["name"]
-                url = (
-                    f"https://{self.hostname}{path}/{name}/"
-                    f"{report['topology_schema']['group']['group']['type']}?"
-                    f"start_time="
-                    f"{date_considered.strftime('%Y-%m-%dT00:00:00Z')}&"
-                    f"end_time="
-                    f"{date_considered.strftime('%Y-%m-%dT23:59:59Z')}"
-                )
-                if self.type == "ar":
-                    url = f"{url}&granularity=daily"
-                    obj = "availability"
-
-                else:
-                    obj = "status"
-
-                try:
-                    response = requests.get(
-                        url,
-                        headers={
-                            "Accept": "application/json",
-                            "x-api-key": self.tenant_tokens[tenant]
-                        },
-                        timeout=self.timeout
+            if "data" in tenants_reports.keys():
+                for report in tenants_reports["data"]:
+                    name = report["info"]["name"]
+                    url = (
+                        f"https://{self.hostname}{path}/{name}/"
+                        f"{report['topology_schema']['group']['group']['type']}"
+                        f"?start_time="
+                        f"{date_considered.strftime('%Y-%m-%dT00:00:00Z')}&"
+                        f"end_time="
+                        f"{date_considered.strftime('%Y-%m-%dT23:59:59Z')}"
                     )
+                    if self.type == "ar":
+                        url = f"{url}&granularity=daily"
+                        obj = "availability"
 
-                    response.raise_for_status()
+                    else:
+                        obj = "status"
 
-                    results = response.json()
+                    try:
+                        response = requests.get(
+                            url,
+                            headers={
+                                "Accept": "application/json",
+                                "x-api-key": self.tenant_tokens[tenant]
+                            },
+                            timeout=self.timeout
+                        )
 
-                    if results:
-                        try:
-                            if self.type == "ar":
-                                obj = "availability"
-                                assert results["results"][0]["endpoints"][0][
-                                    "results"
-                                ][0]["availability"]
+                        response.raise_for_status()
 
-                            else:
-                                assert results["groups"][0]["statuses"]
+                        results = response.json()
 
-                            tenant_results.update({
-                                report["info"]["name"]: "OK"
-                            })
+                        if results:
+                            try:
+                                if self.type == "ar":
+                                    obj = "availability"
+                                    assert results["results"][0][
+                                        "endpoints"
+                                    ][0]["results"][0]["availability"]
 
-                        except (KeyError, AssertionError):
-                            tenant_results.update({
-                                name: f"CRITICAL - Unable to retrieve {obj} "
-                                      f"from report {name}"
-                            })
+                                else:
+                                    assert results["groups"][0]["statuses"]
 
-                except (
-                        requests.exceptions.RequestException,
-                        requests.exceptions.HTTPError
-                ) as e:
-                    tenant_results.update({
-                        name: f"CRITICAL - Unable to retrieve {obj} for "
-                              f"report {name}: {str(e)}"
-                    })
+                                tenant_results.update({
+                                    report["info"]["name"]: "OK"
+                                })
 
-            check_results.update({tenant: tenant_results})
+                            except (KeyError, AssertionError):
+                                tenant_results.update({
+                                    name:
+                                        f"CRITICAL - Unable to retrieve {obj} "
+                                        f"from report {name}"
+                                })
+
+                    except (
+                            requests.exceptions.RequestException,
+                            requests.exceptions.HTTPError
+                    ) as e:
+                        tenant_results.update({
+                            name: f"CRITICAL - Unable to retrieve {obj} for "
+                                  f"report {name}: {str(e)}"
+                        })
+
+                check_results.update({tenant: tenant_results})
+
+            if "exception" in tenants_reports.keys():
+                check_results.update({
+                    tenant: {
+                        "REPORTS_EXCEPTION": tenants_reports["exception"]
+                    }
+                })
 
         return check_results
 

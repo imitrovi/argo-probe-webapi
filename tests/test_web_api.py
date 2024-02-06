@@ -1001,7 +1001,7 @@ class WebAPIReportsTests(unittest.TestCase):
             MockResponse(data=mock_reports2, status_code=200)
         ]
         webapi = WebAPIReports(SimpleNamespace(**self.arguments))
-        reports, exceptions = webapi._get_reports()
+        reports = webapi._get_reports()
         self.assertEqual(mock_get.call_count, 2)
         mock_get.assert_has_calls([
             call(
@@ -1020,13 +1020,16 @@ class WebAPIReportsTests(unittest.TestCase):
             )
         ], any_order=True)
         self.assertEqual(reports, {
-            "TENANT1": [
-                mock_reports1["data"][0],
-                mock_reports1["data"][1],
-            ],
-            "TENANT2": mock_reports2["data"]
+            "TENANT1": {
+                "data": [
+                    mock_reports1["data"][0],
+                    mock_reports1["data"][1],
+                ]
+            },
+            "TENANT2": {
+                "data": mock_reports2["data"]
+            }
         })
-        self.assertEqual(exceptions, dict())
 
     @patch("argo_probe_webapi.web_api.requests.get")
     def test_get_reports_with_error_with_one_tenant(self, mock_get):
@@ -1035,7 +1038,7 @@ class WebAPIReportsTests(unittest.TestCase):
             MockResponse(data=mock_reports2, status_code=200)
         ]
         webapi = WebAPIReports(SimpleNamespace(**self.arguments))
-        reports, exceptions = webapi._get_reports()
+        reports = webapi._get_reports()
         self.assertEqual(mock_get.call_count, 2)
         mock_get.assert_has_calls([
             call(
@@ -1053,8 +1056,17 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ], any_order=True)
-        self.assertEqual(reports, {"TENANT2": mock_reports2["data"]})
-        self.assertEqual(exceptions, {"TENANT1": "Error has occurred"})
+        self.assertEqual(
+            reports, {
+                "TENANT1": {
+                    "exception": "CRITICAL - Error fetching reports for tenant "
+                                 "TENANT1: Error has occurred"
+                },
+                "TENANT2": {
+                    "data": mock_reports2["data"]
+                }
+            }
+        )
 
     @patch("argo_probe_webapi.web_api.requests.get")
     def test_get_reports_with_error_with_two_tenants(self, mock_get):
@@ -1063,7 +1075,7 @@ class WebAPIReportsTests(unittest.TestCase):
             MockResponse(data=None, status_code=500)
         ]
         webapi = WebAPIReports(SimpleNamespace(**self.arguments))
-        reports, exceptions = webapi._get_reports()
+        reports = webapi._get_reports()
         self.assertEqual(mock_get.call_count, 2)
         mock_get.assert_has_calls([
             call(
@@ -1081,11 +1093,16 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ], any_order=True)
-        self.assertEqual(reports, dict())
         self.assertEqual(
-            exceptions, {
-                "TENANT1": "Error has occurred",
-                "TENANT2": "Error has occurred"
+            reports, {
+                "TENANT1": {
+                    "exception": "CRITICAL - Error fetching reports for tenant "
+                                 "TENANT1: Error has occurred"
+                },
+                "TENANT2": {
+                    "exception": "CRITICAL - Error fetching reports for tenant "
+                                 "TENANT2: Error has occurred"
+                }
             }
         )
 
@@ -1096,9 +1113,11 @@ class WebAPIReportsTests(unittest.TestCase):
             self, mock_get_reports, mock_get, mock_today
     ):
         mock_get_reports.return_value = {
-            "TENANT1": [mock_reports1["data"][0], mock_reports1["data"][1]],
-            "TENANT2": mock_reports2["data"]
-        }, dict()
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]}
+        }
         mock_get.side_effect = mock_check_ar_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
         arguments = self.arguments.copy()
@@ -1150,13 +1169,84 @@ class WebAPIReportsTests(unittest.TestCase):
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
+    def test_check_ar_results_with_exception_in_fetching_all_reports(
+            self, mock_get_reports, mock_get, mock_today
+    ):
+        mock_get_reports.return_value = {
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]},
+            "TENANT3": {
+                "exception": "CRITICAL - Error fetching reports for tenant "
+                             "TENANT1: Error has occurred"
+            }
+        }
+        mock_get.side_effect = mock_check_ar_result
+        mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        arguments = self.arguments.copy()
+        arguments["rtype"] = "ar"
+        webapi = WebAPIReports(SimpleNamespace(**arguments))
+        results = webapi.check()
+        self.assertEqual(mock_get.call_count, 3)
+        mock_get.assert_has_calls([
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/results/REPORT1/"
+                "SERVICEGROUPS?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z&granularity=daily",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant1-token"
+                },
+                timeout=30
+            ),
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/results/REPORT2/"
+                "SITES?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z&granularity=daily",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant1-token"
+                },
+                timeout=30
+            ),
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/results/CORE/"
+                "SITES?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z&granularity=daily",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant2-token"
+                },
+                timeout=30
+            )
+        ])
+        self.assertEqual(
+            results, {
+                "TENANT1": {
+                    "REPORT1": "OK",
+                    "REPORT2": "OK"
+                },
+                "TENANT2": {
+                    "CORE": "OK"
+                },
+                "TENANT3": {
+                    "REPORTS_EXCEPTION":
+                        "CRITICAL - Error fetching reports for tenant TENANT1: "
+                        "Error has occurred"
+                }
+            }
+        )
+
+    @patch("argo_probe_webapi.web_api.get_today")
+    @patch("argo_probe_webapi.web_api.requests.get")
+    @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_ar_results_with_error(
             self, mock_get_reports, mock_get, mock_today
     ):
         mock_get_reports.return_value = {
-            "TENANT1": [mock_reports1["data"][0], mock_reports1["data"][1]],
-            "TENANT2": mock_reports2["data"]
-        }, dict()
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]}
+        }
         mock_get.side_effect = mock_check_wrong_ar_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
         arguments = self.arguments.copy()
@@ -1213,9 +1303,11 @@ class WebAPIReportsTests(unittest.TestCase):
             self, mock_get_reports, mock_get, mock_today
     ):
         mock_get_reports.return_value = {
-            "TENANT1": [mock_reports1["data"][0], mock_reports1["data"][1]],
-            "TENANT2": mock_reports2["data"]
-        }, dict()
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]}
+        }
         mock_get.side_effect = mock_check_empty_availability_ar_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
         arguments = self.arguments.copy()
@@ -1272,9 +1364,11 @@ class WebAPIReportsTests(unittest.TestCase):
             self, mock_get_reports, mock_get, mock_today
     ):
         mock_get_reports.return_value = {
-            "TENANT1": [mock_reports1["data"][0], mock_reports1["data"][1]],
-            "TENANT2": mock_reports2["data"]
-        }, dict()
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]}
+        }
         mock_get.side_effect = mock_check_ar_result_with_response_error
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
         arguments = self.arguments.copy()
@@ -1331,9 +1425,11 @@ class WebAPIReportsTests(unittest.TestCase):
             self, mock_get_reports, mock_get, mock_today
     ):
         mock_get_reports.return_value = {
-            "TENANT1": [mock_reports1["data"][0], mock_reports1["data"][1]],
-            "TENANT2": mock_reports2["data"]
-        }, dict()
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]}
+        }
         mock_get.side_effect = mock_check_status_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
         arguments = self.arguments.copy()
@@ -1385,13 +1481,84 @@ class WebAPIReportsTests(unittest.TestCase):
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
+    def test_check_status_results_with_exception_in_fetching_all_reports(
+            self, mock_get_reports, mock_get, mock_today
+    ):
+        mock_get_reports.return_value = {
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]},
+            "TENANT3": {
+                "exception": "CRITICAL - Error fetching reports for tenant "
+                             "TENANT1: Error has occurred"
+            }
+        }
+        mock_get.side_effect = mock_check_status_result
+        mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        arguments = self.arguments.copy()
+        arguments["rtype"] = "status"
+        webapi = WebAPIReports(SimpleNamespace(**arguments))
+        results = webapi.check()
+        self.assertEqual(mock_get.call_count, 3)
+        mock_get.assert_has_calls([
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/status/REPORT1/"
+                "SERVICEGROUPS?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant1-token"
+                },
+                timeout=30
+            ),
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/status/REPORT2/"
+                "SITES?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant1-token"
+                },
+                timeout=30
+            ),
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/status/CORE/"
+                "SITES?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant2-token"
+                },
+                timeout=30
+            )
+        ])
+        self.assertEqual(
+            results, {
+                "TENANT1": {
+                    "REPORT1": "OK",
+                    "REPORT2": "OK"
+                },
+                "TENANT2": {
+                    "CORE": "OK"
+                },
+                "TENANT3": {
+                    "REPORTS_EXCEPTION":
+                        "CRITICAL - Error fetching reports for tenant TENANT1: "
+                        "Error has occurred"
+                }
+            }
+        )
+
+    @patch("argo_probe_webapi.web_api.get_today")
+    @patch("argo_probe_webapi.web_api.requests.get")
+    @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_status_results_with_error(
             self, mock_get_reports, mock_get, mock_today
     ):
         mock_get_reports.return_value = {
-            "TENANT1": [mock_reports1["data"][0], mock_reports1["data"][1]],
-            "TENANT2": mock_reports2["data"]
-        }, dict()
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]}
+        }
         mock_get.side_effect = mock_check_wrong_status_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
         arguments = self.arguments.copy()
@@ -1448,9 +1615,11 @@ class WebAPIReportsTests(unittest.TestCase):
             self, mock_get_reports, mock_get, mock_today
     ):
         mock_get_reports.return_value = {
-            "TENANT1": [mock_reports1["data"][0], mock_reports1["data"][1]],
-            "TENANT2": mock_reports2["data"]
-        }, dict()
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]}
+        }
         mock_get.side_effect = mock_check_emtpy_statuses_status_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
         arguments = self.arguments.copy()
@@ -1507,9 +1676,11 @@ class WebAPIReportsTests(unittest.TestCase):
             self, mock_get_reports, mock_get, mock_today
     ):
         mock_get_reports.return_value = {
-            "TENANT1": [mock_reports1["data"][0], mock_reports1["data"][1]],
-            "TENANT2": mock_reports2["data"]
-        }, dict()
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]}
+        }
         mock_get.side_effect = mock_check_status_result_with_response_error
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
         arguments = self.arguments.copy()
