@@ -1,4 +1,50 @@
 #!/usr/bin/env python3
-from argo_probe_webapi import web_api
+import argparse
+import sys
 
-web_api.main()
+from argo_probe_webapi.web_api import WebAPIReports, Status
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-H', dest='hostname', required=True, type=str, help='hostname'
+    )
+    parser.add_argument(
+        '-k', dest='tenant_token', required=True, type=str, nargs="+",
+        help='tenant_token', action='append'
+    )
+    parser.add_argument(
+        '--rtype', dest='rtype', required=True, type=str, default='ar',
+        choices=["status", "ar"],
+        help='type of results to fetch: can be status or ar (default ar)'
+    )
+    parser.add_argument(
+        '--day', dest='day', required=False, type=int, default=1,
+        help='days for which to check the results; '
+             'eg. 1 for yesterday, 2 for two days ago (default 1)'
+    )
+    parser.add_argument(
+        '-t', dest='timeout', required=False, type=int, default=180,
+        help="seconds before connection times out (default: 180)"
+    )
+    parser.add_argument(
+        '-v', '--verbose', dest="debug", help='Set verbosity level',
+        action='count', default=0
+    )
+    arguments = parser.parse_args()
+
+    webapi_reports = WebAPIReports(arguments)
+
+    results = webapi_reports.check()
+
+    status = Status(
+        rtype=arguments.rtype, data=results, verbosity=arguments.debug
+    )
+
+    print(status.get_message())
+    sys.exit(status.get_code())
+
+
+if __name__ == "__main__":
+    main()
