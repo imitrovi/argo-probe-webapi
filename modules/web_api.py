@@ -66,6 +66,7 @@ class WebAPIReports:
         check_results = dict()
         for tenant, tenants_reports in reports.items():
             tenant_results = dict()
+            tenant_performance = dict()
             if self.type == "ar":
                 path = API_RESULTS
 
@@ -105,6 +106,15 @@ class WebAPIReports:
                         response.raise_for_status()
 
                         results = response.json()
+                        response_time = response.elapsed.total_seconds()
+                        response_size = len(response.content)
+
+                        tenant_performance.update({
+                            name: {
+                                "time": response_time,
+                                "size": response_size
+                            }
+                        })
 
                         if results:
                             try:
@@ -117,9 +127,7 @@ class WebAPIReports:
                                 else:
                                     assert results["groups"][0]["statuses"]
 
-                                tenant_results.update({
-                                    report["info"]["name"]: "OK"
-                                })
+                                tenant_results.update({name: "OK"})
 
                             except (KeyError, AssertionError):
                                 tenant_results.update({
@@ -137,7 +145,16 @@ class WebAPIReports:
                                   f"report {name}: {str(e)}"
                         })
 
-                check_results.update({tenant: tenant_results})
+                if tenant_performance:
+                    check_results.update({
+                        tenant: {
+                            "results": tenant_results,
+                            "performance": tenant_performance
+                        }
+                    })
+
+                else:
+                    check_results.update({tenant: {"results": tenant_results}})
 
             if "exception" in tenants_reports.keys():
                 check_results.update({

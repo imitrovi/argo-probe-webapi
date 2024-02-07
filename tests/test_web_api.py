@@ -1,4 +1,5 @@
 import datetime
+import json
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch, call
@@ -806,6 +807,12 @@ class MockResponse:
     def __init__(self, data, status_code):
         self.data = data
         self.status_code = status_code
+        self.elapsed = datetime.timedelta(seconds=0.3827)
+        if self.data:
+            self.content = json.dumps(self.data)
+
+        else:
+            self.content = "500 BAD REQUEST"
 
         if self.status_code == 200:
             self.reason = "OK"
@@ -1157,11 +1164,31 @@ class WebAPIReportsTests(unittest.TestCase):
         self.assertEqual(
             results, {
                 "TENANT1": {
-                    "REPORT1": "OK",
-                    "REPORT2": "OK"
+                    "results": {
+                        "REPORT1": "OK",
+                        "REPORT2": "OK"
+                    },
+                    "performance": {
+                        "REPORT1": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results11))
+                        },
+                        "REPORT2": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results12))
+                        }
+                    }
                 },
                 "TENANT2": {
-                    "CORE": "OK"
+                    "results": {
+                        "CORE": "OK"
+                    },
+                    "performance": {
+                        "CORE": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results21))
+                        }
+                    }
                 }
             }
         )
@@ -1221,11 +1248,31 @@ class WebAPIReportsTests(unittest.TestCase):
         self.assertEqual(
             results, {
                 "TENANT1": {
-                    "REPORT1": "OK",
-                    "REPORT2": "OK"
+                    "results": {
+                        "REPORT1": "OK",
+                        "REPORT2": "OK"
+                    },
+                    "performance": {
+                        "REPORT1": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results11))
+                        },
+                        "REPORT2": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results12))
+                        }
+                    }
                 },
                 "TENANT2": {
-                    "CORE": "OK"
+                    "results": {
+                        "CORE": "OK"
+                    },
+                    "performance": {
+                        "CORE": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results21))
+                        }
+                    }
                 },
                 "TENANT3": {
                     "REPORTS_EXCEPTION":
@@ -1286,12 +1333,32 @@ class WebAPIReportsTests(unittest.TestCase):
         self.assertEqual(
             results, {
                 "TENANT1": {
-                    "REPORT1": "OK",
-                    "REPORT2": "CRITICAL - Unable to retrieve availability "
-                               "from report REPORT2"
+                    "results": {
+                        "REPORT1": "OK",
+                        "REPORT2": "CRITICAL - Unable to retrieve availability "
+                                   "from report REPORT2"
+                    },
+                    "performance": {
+                        "REPORT1": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results11))
+                        },
+                        "REPORT2": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_wrong_ar_results12))
+                        }
+                    }
                 },
                 "TENANT2": {
-                    "CORE": "OK"
+                    "results": {
+                        "CORE": "OK"
+                    },
+                    "performance": {
+                        "CORE": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results21))
+                        }
+                    }
                 }
             }
         )
@@ -1347,12 +1414,34 @@ class WebAPIReportsTests(unittest.TestCase):
         self.assertEqual(
             results, {
                 "TENANT1": {
-                    "REPORT1": "OK",
-                    "REPORT2": "OK"
+                    "results": {
+                        "REPORT1": "OK",
+                        "REPORT2": "OK"
+                    },
+                    "performance": {
+                        "REPORT1": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results11))
+                        },
+                        "REPORT2": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results12))
+                        }
+                    }
                 },
                 "TENANT2": {
-                    "CORE": "CRITICAL - Unable to retrieve availability from "
-                            "report CORE"
+                    "results": {
+                        "CORE": "CRITICAL - Unable to retrieve availability from "
+                                "report CORE"
+                    },
+                    "performance": {
+                        "CORE": {
+                            "time": 0.3827,
+                            "size": len(
+                                json.dumps(mock_empty_availability_ar_results21)
+                            )
+                        }
+                    }
                 }
             }
         )
@@ -1408,12 +1497,28 @@ class WebAPIReportsTests(unittest.TestCase):
         self.assertEqual(
             results, {
                 "TENANT1": {
-                    "REPORT1": "CRITICAL - Unable to retrieve availability for"
-                               " report REPORT1: Error has occurred",
-                    "REPORT2": "OK"
+                    "results": {
+                        "REPORT1": "CRITICAL - Unable to retrieve availability "
+                                   "for report REPORT1: Error has occurred",
+                        "REPORT2": "OK"
+                    },
+                    "performance": {
+                        "REPORT2": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results12))
+                        }
+                    }
                 },
                 "TENANT2": {
-                    "CORE": "OK"
+                    "results": {
+                        "CORE": "OK"
+                    },
+                    "performance": {
+                        "CORE": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_ar_results21))
+                        }
+                    }
                 }
             }
         )
@@ -1469,11 +1574,31 @@ class WebAPIReportsTests(unittest.TestCase):
         self.assertEqual(
             results, {
                 "TENANT1": {
-                    "REPORT1": "OK",
-                    "REPORT2": "OK"
+                    "results": {
+                        "REPORT1": "OK",
+                        "REPORT2": "OK"
+                    },
+                    "performance": {
+                        "REPORT1": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results11))
+                        },
+                        "REPORT2": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results12))
+                        }
+                    }
                 },
                 "TENANT2": {
-                    "CORE": "OK"
+                    "results": {
+                        "CORE": "OK"
+                    },
+                    "performance": {
+                        "CORE": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results21))
+                        }
+                    }
                 }
             }
         )
@@ -1533,11 +1658,31 @@ class WebAPIReportsTests(unittest.TestCase):
         self.assertEqual(
             results, {
                 "TENANT1": {
-                    "REPORT1": "OK",
-                    "REPORT2": "OK"
+                    "results": {
+                        "REPORT1": "OK",
+                        "REPORT2": "OK"
+                    },
+                    "performance": {
+                        "REPORT1": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results11))
+                        },
+                        "REPORT2": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results12))
+                        }
+                    }
                 },
                 "TENANT2": {
-                    "CORE": "OK"
+                    "results": {
+                        "CORE": "OK"
+                    },
+                    "performance": {
+                        "CORE": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results21))
+                        }
+                    }
                 },
                 "TENANT3": {
                     "REPORTS_EXCEPTION":
@@ -1598,12 +1743,34 @@ class WebAPIReportsTests(unittest.TestCase):
         self.assertEqual(
             results, {
                 "TENANT1": {
-                    "REPORT1": "OK",
-                    "REPORT2": "CRITICAL - Unable to retrieve status from "
-                               "report REPORT2"
+                    "results": {
+                        "REPORT1": "OK",
+                        "REPORT2": "CRITICAL - Unable to retrieve status from "
+                                   "report REPORT2"
+                    },
+                    "performance": {
+                        "REPORT1": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results11))
+                        },
+                        "REPORT2": {
+                            "time": 0.3827,
+                            "size": len(
+                                json.dumps(mock_wrong_status_results12)
+                            ),
+                        }
+                    }
                 },
                 "TENANT2": {
-                    "CORE": "OK"
+                    "results": {
+                        "CORE": "OK"
+                    },
+                    "performance": {
+                        "CORE": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results21))
+                        }
+                    }
                 }
             }
         )
@@ -1659,12 +1826,34 @@ class WebAPIReportsTests(unittest.TestCase):
         self.assertEqual(
             results, {
                 "TENANT1": {
-                    "REPORT1": "OK",
-                    "REPORT2": "OK"
+                    "results": {
+                        "REPORT1": "OK",
+                        "REPORT2": "OK"
+                    },
+                    "performance": {
+                        "REPORT1": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results11))
+                        },
+                        "REPORT2": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results12))
+                        }
+                    }
                 },
                 "TENANT2": {
-                    "CORE":
-                        "CRITICAL - Unable to retrieve status from report CORE"
+                    "results": {
+                        "CORE":
+                            "CRITICAL - Unable to retrieve status from report CORE"
+                    },
+                    "performance": {
+                        "CORE": {
+                            "time": 0.3827,
+                            "size": len(
+                                json.dumps(mock_empty_statuses_status_results21)
+                            )
+                        }
+                    }
                 }
             }
         )
@@ -1720,12 +1909,28 @@ class WebAPIReportsTests(unittest.TestCase):
         self.assertEqual(
             results, {
                 "TENANT1": {
-                    "REPORT1": "CRITICAL - Unable to retrieve status for "
-                               "report REPORT1: Error has occurred",
-                    "REPORT2": "OK"
+                    "results": {
+                        "REPORT1": "CRITICAL - Unable to retrieve status for "
+                                   "report REPORT1: Error has occurred",
+                        "REPORT2": "OK"
+                    },
+                    "performance": {
+                        "REPORT2": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results12))
+                        }
+                    }
                 },
                 "TENANT2": {
-                    "CORE": "OK"
+                    "results": {
+                        "CORE": "OK"
+                    },
+                    "performance": {
+                        "CORE": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results21))
+                        }
+                    }
                 }
             }
         )
