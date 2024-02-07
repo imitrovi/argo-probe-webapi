@@ -1806,6 +1806,120 @@ class StatusTests(unittest.TestCase):
         )
         self.assertEqual(status.get_code(), 2)
 
+    def test_error_fetching_all_reports_for_ar_reports(self):
+        results = {
+            "TENANT1": {
+                "REPORT1": "OK",
+                "REPORT2": "CRITICAL - Unable to retrieve availability for "
+                           "report REPORT2",
+                "REPORT3": "OK"
+            },
+            "TENANT2": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            },
+            "TENANT3": {
+                "REPORT4": "OK",
+                "REPORT5": "OK"
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with AR results for report(s) REPORT2 for "
+            "tenant TENANT1; problem fetching all reports for tenant(s) TENANT2"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_error_fetching_all_reports_for_ar_reports_verbose(self):
+        results = {
+            "TENANT1": {
+                "REPORT1": "OK",
+                "REPORT2": "CRITICAL - Unable to retrieve availability for "
+                           "report REPORT2",
+                "REPORT3": "OK"
+            },
+            "TENANT2": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            },
+            "TENANT3": {
+                "REPORT4": "OK",
+                "REPORT5": "OK"
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with AR results for report(s) REPORT2 for "
+            "tenant TENANT1; problem fetching all reports for tenant(s) "
+            "TENANT2\n"
+            "TENANT1:\n"
+            "AR for report REPORT1 - OK\n"
+            "AR for report REPORT2 - CRITICAL - Unable to retrieve "
+            "availability for report REPORT2\n"
+            "AR for report REPORT3 - OK\n\n"
+            "TENANT2:\n"
+            "CRITICAL - Error fetching reports\n\n"
+            "TENANT3:\n"
+            "AR for report REPORT4 - OK\n"
+            "AR for report REPORT5 - OK"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_multiple_errors_fetching_all_reports_for_ar_reports(self):
+        results = {
+            "TENANT1": {
+                "REPORT1": "OK",
+                "REPORT2": "OK",
+                "REPORT3": "OK"
+            },
+            "TENANT2": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            },
+            "TENANT3": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports for "
+                                     "tenant TENANT3: 401 Unauthorized"
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem fetching all reports for tenant(s) TENANT2, "
+            "TENANT3"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_multiple_errors_fetching_all_reports_for_ar_reports_verbose(self):
+        results = {
+            "TENANT1": {
+                "REPORT1": "OK",
+                "REPORT2": "OK",
+                "REPORT3": "OK"
+            },
+            "TENANT2": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            },
+            "TENANT3": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports for "
+                                     "tenant TENANT3: 401 Unauthorized"
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem fetching all reports for tenant(s) "
+            "TENANT2, TENANT3\n"
+            "TENANT1:\n"
+            "AR for report REPORT1 - OK\n"
+            "AR for report REPORT2 - OK\n"
+            "AR for report REPORT3 - OK\n\n"
+            "TENANT2:\n"
+            "CRITICAL - Error fetching reports\n\n"
+            "TENANT3:\n"
+            "CRITICAL - Error fetching reports for tenant TENANT3: 401 "
+            "Unauthorized"
+        )
+        self.assertEqual(status.get_code(), 2)
+
     def test_error_with_ar_reports_verbose(self):
         results = {
             "TENANT1": {
@@ -1938,6 +2052,119 @@ class StatusTests(unittest.TestCase):
             "Status for report REPORT6 - OK"
         )
         self.assertEqual(status.get_code(), 0)
+
+    def test_error_fetching_all_reports_for_status_reports(self):
+        results = {
+            "TENANT1": {
+                "REPORT1": "OK",
+                "REPORT2": "CRITICAL - Unable to retrieve status for report "
+                           "REPORT2",
+                "REPORT3": "OK"
+            },
+            "TENANT2": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            },
+            "TENANT3": {
+                "REPORT6": "OK"
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with status results for report(s) REPORT2 for "
+            "tenant TENANT1; problem fetching all reports for tenant(s) TENANT2"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_error_fetching_all_reports_for_status_reports_verbose(self):
+        results = {
+            "TENANT1": {
+                "REPORT1": "OK",
+                "REPORT2": "CRITICAL - Unable to retrieve status for report "
+                           "REPORT2",
+                "REPORT3": "OK"
+            },
+            "TENANT2": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            },
+            "TENANT3": {
+                "REPORT6": "OK"
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with status results for report(s) REPORT2 for "
+            "tenant TENANT1; problem fetching all reports for tenant(s) "
+            "TENANT2\n"
+            "TENANT1:\n"
+            "Status for report REPORT1 - OK\n"
+            "Status for report REPORT2 - CRITICAL - Unable to retrieve status "
+            "for report REPORT2\n"
+            "Status for report REPORT3 - OK\n\n"
+            "TENANT2:\n"
+            "CRITICAL - Error fetching reports\n\n"
+            "TENANT3:\n"
+            "Status for report REPORT6 - OK"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_multiple_errors_fetching_all_reports_for_status_reports(self):
+        results = {
+            "TENANT1": {
+                "REPORT1": "OK",
+                "REPORT2": "OK",
+                "REPORT3": "OK"
+            },
+            "TENANT2": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            },
+            "TENANT3": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports for "
+                                     "tenant TENANT3: 401 Unauthorized"
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem fetching all reports for tenant(s) TENANT2, "
+            "TENANT3"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_multiple_errors_fetching_all_reports_for_status_reports_verbose(
+            self
+    ):
+        results = {
+            "TENANT1": {
+                "REPORT1": "OK",
+                "REPORT2": "OK",
+                "REPORT3": "OK"
+            },
+            "TENANT2": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            },
+            "TENANT3": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports for "
+                                     "tenant TENANT3: 401 Unauthorized"
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem fetching all reports for tenant(s) "
+            "TENANT2, TENANT3\n"
+            "TENANT1:\n"
+            "Status for report REPORT1 - OK\n"
+            "Status for report REPORT2 - OK\n"
+            "Status for report REPORT3 - OK\n\n"
+            "TENANT2:\n"
+            "CRITICAL - Error fetching reports\n\n"
+            "TENANT3:\n"
+            "CRITICAL - Error fetching reports for tenant TENANT3: 401 "
+            "Unauthorized"
+        )
+        self.assertEqual(status.get_code(), 2)
 
     def test_error_with_status_reports(self):
         results = {

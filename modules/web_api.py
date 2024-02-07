@@ -170,30 +170,47 @@ class Status:
             return self.rtype
 
     def _get_errors(self):
-        errors = dict()
+        report_errors = dict()
+        tenants_with_errors = list()
         for tenant, reports in self.data.items():
             report_with_error = list()
             for report, status in reports.items():
+                if report == "REPORTS_EXCEPTION":
+                    tenants_with_errors.append(tenant)
+                    continue
+
                 if status != "OK":
                     report_with_error.append(report)
 
-                if len(report_with_error) > 0:
-                    errors.update({tenant: report_with_error})
+            if len(report_with_error) > 0:
+                report_errors.update({tenant: report_with_error})
 
-        return errors
+        return report_errors, tenants_with_errors
 
     def get_message(self):
-        if not self._get_errors():
+        reports_errors, tenants_errors = self._get_errors()
+        if not (reports_errors or tenants_errors):
             first_line = (f"OK - {self._capitalize_rtype()} results "
                           f"available for all tenants and reports")
 
         else:
-            first_line = \
-                f"CRITICAL - Problem with {self.rtype} results for"
+            first_line = "CRITICAL - Problem"
 
-            for tenant, reports in self._get_errors().items():
-                first_line = (f"{first_line} report(s) "
-                              f"{', '.join(reports)} for tenant {tenant};")
+            if reports_errors:
+                first_line = f"{first_line} with {self.rtype} results for"
+
+                for tenant, reports in reports_errors.items():
+                    first_line = (f"{first_line} report(s) "
+                                  f"{', '.join(reports)} for tenant {tenant};")
+
+            if tenants_errors:
+                if first_line.endswith("Problem"):
+                    first_line = (f"{first_line} fetching all reports for "
+                                  f"tenant(s) {', '.join(tenants_errors)}")
+
+                else:
+                    first_line = (f"{first_line} problem fetching all reports "
+                                  f"for tenant(s) {', '.join(tenants_errors)}")
 
             first_line = first_line.strip(";")
 
@@ -205,16 +222,20 @@ class Status:
             for tenant, reports in self.data.items():
                 multiline.append(f"{tenant}:")
                 for report, status in reports.items():
-                    multiline.append(
-                        f"{self._capitalize_rtype()} for report {report} "
-                        f"- {status}"
-                    )
+                    if report == "REPORTS_EXCEPTION":
+                        multiline.append(status)
+                    else:
+                        multiline.append(
+                            f"{self._capitalize_rtype()} for report {report} "
+                            f"- {status}"
+                        )
                 multiline[-1] = f"{multiline[-1]}\n"
 
             return "\n".join(multiline).strip()
 
     def get_code(self):
-        if self._get_errors():
+        reports_errors, tenant_errors = self._get_errors()
+        if reports_errors or tenant_errors:
             return self.CRITICAL
 
         else:
