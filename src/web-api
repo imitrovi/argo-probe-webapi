@@ -15,12 +15,13 @@ def main():
     required = parser.add_argument_group("required arguments")
     optional = parser.add_argument_group("optional arguments")
     required.add_argument(
-        '-H', dest='hostname', required=True, type=str, help='hostname'
+        '-H', '--hostname', dest='hostname', required=True, type=str,
+        help='hostname'
     )
     required.add_argument(
-        '-k', dest='tenant_token', required=True, type=str, nargs="+",
-        help='token for authentication of tenant; must be of form TENANT:token',
-        action='append'
+        '-k', '--token', dest='tenant_token', required=True, type=str,
+        nargs="+", action='append',
+        help='token for authentication of tenant; must be of form TENANT:token'
     )
     required.add_argument(
         '--rtype', dest='rtype', required=True, type=str, default='ar',
