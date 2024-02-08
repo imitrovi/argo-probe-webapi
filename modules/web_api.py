@@ -202,8 +202,9 @@ class Status:
 
                     else:
                         for report, perf_data in value.items():
-                            time += perf_data["time"]
-                            size += perf_data["size"]
+                            if perf_data["time"] > time:
+                                time = perf_data["time"]
+                                size = perf_data["size"]
 
             if len(report_with_error) > 0:
                 report_errors.update({tenant: report_with_error})

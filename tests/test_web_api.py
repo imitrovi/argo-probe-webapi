@@ -2169,8 +2169,8 @@ class StatusTests(unittest.TestCase):
         status = Status(rtype="ar", data=results, verbosity=0)
         self.assertEqual(
             status.get_message(),
-            "OK - AR results available for all tenants and reports|"
-            "time=1.36018s;size=145509B"
+            "OK - AR results available for all tenants and reports"
+            "|time=0.565367s;size=54741B"
         )
         self.assertEqual(status.get_code(), 0)
 
@@ -2228,8 +2228,8 @@ class StatusTests(unittest.TestCase):
         status = Status(rtype="ar", data=results, verbosity=1)
         self.assertEqual(
             status.get_message(),
-            "OK - AR results available for all tenants and reports|"
-            "time=1.36018s;size=145509B\n"
+            "OK - AR results available for all tenants and reports"
+            "|time=0.565367s;size=54741B\n"
             "TENANT1:\n"
             "AR for report REPORT1 - OK\n"
             "AR for report REPORT2 - OK\n"
@@ -2291,7 +2291,7 @@ class StatusTests(unittest.TestCase):
             status.get_message(),
             "CRITICAL - Problem with AR results for report(s) REPORT2 for "
             "tenant TENANT1; problem fetching all reports for tenant(s) "
-            "TENANT2|time=1.155507s;size=90616B"
+            "TENANT2|time=0.565367s;size=54741B"
         )
         self.assertEqual(status.get_code(), 2)
 
@@ -2344,7 +2344,7 @@ class StatusTests(unittest.TestCase):
             status.get_message(),
             "CRITICAL - Problem with AR results for report(s) REPORT2 for "
             "tenant TENANT1; problem fetching all reports for tenant(s) "
-            "TENANT2|time=1.155507s;size=90616B\n"
+            "TENANT2|time=0.565367s;size=54741B\n"
             "TENANT1:\n"
             "AR for report REPORT1 - OK\n"
             "AR for report REPORT2 - CRITICAL - Unable to retrieve "
@@ -2393,7 +2393,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(
             status.get_message(),
             "CRITICAL - Problem fetching all reports for tenant(s) TENANT2, "
-            "TENANT3|time=0.511051s;size=17907B"
+            "TENANT3|time=0.210245s;size=5987B"
         )
         self.assertEqual(status.get_code(), 2)
 
@@ -2432,7 +2432,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(
             status.get_message(),
             "CRITICAL - Problem fetching all reports for tenant(s) "
-            "TENANT2, TENANT3|time=0.511051s;size=17907B\n"
+            "TENANT2, TENANT3|time=0.210245s;size=5987B\n"
             "TENANT1:\n"
             "AR for report REPORT1 - OK\n"
             "AR for report REPORT2 - OK\n"
@@ -2490,7 +2490,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(
             status.get_message(),
             "CRITICAL - Problem with AR results for report(s) REPORT2 for "
-            "tenant TENANT1|time=1.155507s;size=90616B"
+            "tenant TENANT1|time=0.565367s;size=54741B"
         )
         self.assertEqual(status.get_code(), 2)
 
@@ -2539,7 +2539,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(
             status.get_message(),
             "CRITICAL - Problem with AR results for report(s) REPORT2 for "
-            "tenant TENANT1|time=1.155507s;size=90616B\n"
+            "tenant TENANT1|time=0.565367s;size=54741B\n"
             "TENANT1:\n"
             "AR for report REPORT1 - OK\n"
             "AR for report REPORT2 - CRITICAL - Unable to retrieve "
@@ -2597,7 +2597,7 @@ class StatusTests(unittest.TestCase):
             status.get_message(),
             "CRITICAL - Problem with AR results for report(s) REPORT2, REPORT3 "
             "for tenant TENANT1; report(s) REPORT4 for tenant TENANT2"
-            "|time=1.155507s;size=90616B"
+            "|time=0.565367s;size=54741B"
         )
         self.assertEqual(status.get_code(), 2)
 
@@ -2647,7 +2647,7 @@ class StatusTests(unittest.TestCase):
             status.get_message(),
             "CRITICAL - Problem with AR results for report(s) REPORT2, REPORT3 "
             "for tenant TENANT1; report(s) REPORT4 for tenant TENANT2"
-            "|time=1.155507s;size=90616B\n"
+            "|time=0.565367s;size=54741B\n"
             "TENANT1:\n"
             "AR for report REPORT1 - OK\n"
             "AR for report REPORT2 - CRITICAL - Unable to retrieve "
@@ -2788,7 +2788,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(
             status.get_message(),
             "OK - Status results available for all tenants and reports"
-            "|time=1.36018s;size=145509B"
+            "|time=0.565367s;size=54741B"
         )
         self.assertEqual(status.get_code(), 0)
 
@@ -2847,7 +2847,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(
             status.get_message(),
             "OK - Status results available for all tenants and reports"
-            "|time=1.36018s;size=145509B\n"
+            "|time=0.565367s;size=54741B\n"
             "TENANT1:\n"
             "Status for report REPORT1 - OK\n"
             "Status for report REPORT2 - OK\n"
@@ -2904,7 +2904,7 @@ class StatusTests(unittest.TestCase):
             status.get_message(),
             "CRITICAL - Problem with status results for report(s) REPORT2 for "
             "tenant TENANT1; problem fetching all reports for tenant(s) TENANT2"
-            "|time=0.59014s;size=35875B"
+            "|time=0.210245s;size=5987B"
         )
         self.assertEqual(status.get_code(), 2)
 
@@ -2952,8 +2952,7 @@ class StatusTests(unittest.TestCase):
             status.get_message(),
             "CRITICAL - Problem with status results for report(s) REPORT2 for "
             "tenant TENANT1; problem fetching all reports for tenant(s) "
-            "TENANT2"
-            "|time=0.59014s;size=35875B\n"
+            "TENANT2|time=0.210245s;size=5987B\n"
             "TENANT1:\n"
             "Status for report REPORT1 - OK\n"
             "Status for report REPORT2 - CRITICAL - Unable to retrieve status "
@@ -3001,7 +3000,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(
             status.get_message(),
             "CRITICAL - Problem fetching all reports for tenant(s) TENANT2, "
-            "TENANT3|time=0.511051s;size=17907B"
+            "TENANT3|time=0.210245s;size=5987B"
         )
         self.assertEqual(status.get_code(), 2)
 
@@ -3042,7 +3041,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(
             status.get_message(),
             "CRITICAL - Problem fetching all reports for tenant(s) "
-            "TENANT2, TENANT3|time=0.511051s;size=17907B\n"
+            "TENANT2, TENANT3|time=0.210245s;size=5987B\n"
             "TENANT1:\n"
             "Status for report REPORT1 - OK\n"
             "Status for report REPORT2 - OK\n"
@@ -3100,7 +3099,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(
             status.get_message(),
             "CRITICAL - Problem with status results for report(s) REPORT2 for "
-            "tenant TENANT1|time=1.155507s;size=90616B"
+            "tenant TENANT1|time=0.565367s;size=54741B"
         )
         self.assertEqual(status.get_code(), 2)
 
@@ -3149,7 +3148,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(
             status.get_message(),
             "CRITICAL - Problem with status results for report(s) REPORT2 for "
-            "tenant TENANT1|time=1.155507s;size=90616B\n"
+            "tenant TENANT1|time=0.565367s;size=54741B\n"
             "TENANT1:\n"
             "Status for report REPORT1 - OK\n"
             "Status for report REPORT2 - CRITICAL - Unable to retrieve status "
@@ -3207,7 +3206,7 @@ class StatusTests(unittest.TestCase):
             status.get_message(),
             "CRITICAL - Problem with status results for report(s) REPORT2, "
             "REPORT3 for tenant TENANT1; report(s) REPORT4 for tenant TENANT2"
-            "|time=1.155507s;size=90616B"
+            "|time=0.565367s;size=54741B"
         )
         self.assertEqual(status.get_code(), 2)
 
@@ -3257,7 +3256,7 @@ class StatusTests(unittest.TestCase):
             status.get_message(),
             "CRITICAL - Problem with status results for report(s) REPORT2, "
             "REPORT3 for tenant TENANT1; report(s) REPORT4 for tenant TENANT2"
-            "|time=1.155507s;size=90616B\n"
+            "|time=0.565367s;size=54741B\n"
             "TENANT1:\n"
             "Status for report REPORT1 - OK\n"
             "Status for report REPORT2 - CRITICAL - Unable to retrieve status "
