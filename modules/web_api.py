@@ -186,29 +186,41 @@ class Status:
         else:
             return self.rtype
 
-    def _get_errors(self):
+    def _get_info(self):
         report_errors = dict()
         tenants_with_errors = list()
-        for tenant, reports in self.data.items():
+        time = 0
+        size = 0
+        for tenant, data in self.data.items():
             report_with_error = list()
-            for report, status in reports.items():
-                if report == "REPORTS_EXCEPTION":
+            for key, value in data.items():
+                if key == "REPORTS_EXCEPTION":
                     tenants_with_errors.append(tenant)
                     continue
 
-                if status != "OK":
-                    report_with_error.append(report)
+                else:
+                    if key == "results":
+                        for report, status in value.items():
+                            if status != "OK":
+                                report_with_error.append(report)
+
+                    else:
+                        for report, perf_data in value.items():
+                            time += perf_data["time"]
+                            size += perf_data["size"]
 
             if len(report_with_error) > 0:
                 report_errors.update({tenant: report_with_error})
 
-        return report_errors, tenants_with_errors
+        performance_data = f"time={round(time, 6)}s;size={size}B"
+
+        return report_errors, tenants_with_errors, performance_data
 
     def get_message(self):
-        reports_errors, tenants_errors = self._get_errors()
+        reports_errors, tenants_errors, perf_data = self._get_info()
         if not (reports_errors or tenants_errors):
             first_line = (f"OK - {self._capitalize_rtype()} results "
-                          f"available for all tenants and reports")
+                          f"available for all tenants and reports|{perf_data}")
 
         else:
             first_line = "CRITICAL - Problem"
@@ -230,28 +242,35 @@ class Status:
                                   f"for tenant(s) {', '.join(tenants_errors)}")
 
             first_line = first_line.strip(";")
+            first_line = f"{first_line}|{perf_data}"
 
         if self.verbosity == 0:
             return first_line
 
         else:
             multiline = [first_line]
-            for tenant, reports in self.data.items():
+            for tenant, data in self.data.items():
                 multiline.append(f"{tenant}:")
-                for report, status in reports.items():
-                    if report == "REPORTS_EXCEPTION":
-                        multiline.append(status)
+                for key, value in data.items():
+                    if key == "REPORTS_EXCEPTION":
+                        multiline.append(value)
+
+                    elif key == "results":
+                        for report, status in value.items():
+                            multiline.append(
+                                f"{self._capitalize_rtype()} for report "
+                                f"{report} - {status}"
+                            )
+
                     else:
-                        multiline.append(
-                            f"{self._capitalize_rtype()} for report {report} "
-                            f"- {status}"
-                        )
+                        continue
+
                 multiline[-1] = f"{multiline[-1]}\n"
 
             return "\n".join(multiline).strip()
 
     def get_code(self):
-        reports_errors, tenant_errors = self._get_errors()
+        reports_errors, tenant_errors, perf_data = self._get_info()
         if reports_errors or tenant_errors:
             return self.CRITICAL
 
