@@ -988,6 +988,46 @@ def mock_check_status_result_with_response_error(*args, **kwargs):
         )
 
 
+def mock_check_ar_result_all_with_response_errors(*args, **kwargs):
+    if "REPORT1" in args[0]:
+        return MockResponse(
+            data=None,
+            status_code=500
+        )
+
+    elif "REPORT2" in args[0]:
+        return MockResponse(
+            data=None,
+            status_code=500
+        )
+
+    else:
+        return MockResponse(
+            data=None,
+            status_code=500
+        )
+
+
+def mock_check_status_result_all_with_response_errors(*args, **kwargs):
+    if "REPORT1" in args[0]:
+        return MockResponse(
+            data=None,
+            status_code=500
+        )
+
+    elif "REPORT2" in args[0]:
+        return MockResponse(
+            data=None,
+            status_code=500
+        )
+
+    else:
+        return MockResponse(
+            data=None,
+            status_code=500
+        )
+
+
 class WebAPIReportsTests(unittest.TestCase):
     def setUp(self) -> None:
         self.arguments = {
@@ -1526,6 +1566,75 @@ class WebAPIReportsTests(unittest.TestCase):
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
+    def test_check_ar_results_all_with_response_exceptions(
+            self, mock_get_reports, mock_get, mock_today
+    ):
+        mock_get_reports.return_value = {
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]}
+        }
+        mock_get.side_effect = mock_check_ar_result_all_with_response_errors
+        mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        arguments = self.arguments.copy()
+        arguments["rtype"] = "ar"
+        webapi = WebAPIReports(SimpleNamespace(**arguments))
+        results = webapi.check()
+        self.assertEqual(mock_get.call_count, 3)
+        mock_get.assert_has_calls([
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/results/REPORT1/"
+                "SERVICEGROUPS?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z&granularity=daily",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant1-token"
+                },
+                timeout=30
+            ),
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/results/REPORT2/"
+                "SITES?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z&granularity=daily",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant1-token"
+                },
+                timeout=30
+            ),
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/results/CORE/"
+                "SITES?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z&granularity=daily",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant2-token"
+                },
+                timeout=30
+            )
+        ])
+        self.assertEqual(
+            results, {
+                "TENANT1": {
+                    "results": {
+                        "REPORT1": "CRITICAL - Unable to retrieve availability "
+                                   "for report REPORT1: Error has occurred",
+                        "REPORT2": "CRITICAL - Unable to retrieve availability "
+                                   "for report REPORT2: Error has occurred"
+                    },
+                    "performance": {}
+                },
+                "TENANT2": {
+                    "results": {
+                        "CORE": "CRITICAL - Unable to retrieve availability "
+                                "for report CORE: Error has occurred"
+                    },
+                    "performance": {}
+                }
+            }
+        )
+
+    @patch("argo_probe_webapi.web_api.get_today")
+    @patch("argo_probe_webapi.web_api.requests.get")
+    @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_status_results_all_ok(
             self, mock_get_reports, mock_get, mock_today
     ):
@@ -1931,6 +2040,75 @@ class WebAPIReportsTests(unittest.TestCase):
                             "size": len(json.dumps(mock_status_results21))
                         }
                     }
+                }
+            }
+        )
+
+    @patch("argo_probe_webapi.web_api.get_today")
+    @patch("argo_probe_webapi.web_api.requests.get")
+    @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
+    def test_check_status_results_all_with_response_exceptions(
+            self, mock_get_reports, mock_get, mock_today
+    ):
+        mock_get_reports.return_value = {
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]}
+        }
+        mock_get.side_effect = mock_check_status_result_all_with_response_errors
+        mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        arguments = self.arguments.copy()
+        arguments["rtype"] = "status"
+        webapi = WebAPIReports(SimpleNamespace(**arguments))
+        results = webapi.check()
+        self.assertEqual(mock_get.call_count, 3)
+        mock_get.assert_has_calls([
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/status/REPORT1/"
+                "SERVICEGROUPS?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant1-token"
+                },
+                timeout=30
+            ),
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/status/REPORT2/"
+                "SITES?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant1-token"
+                },
+                timeout=30
+            ),
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/status/CORE/"
+                "SITES?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant2-token"
+                },
+                timeout=30
+            )
+        ])
+        self.assertEqual(
+            results, {
+                "TENANT1": {
+                    "results": {
+                        "REPORT1": "CRITICAL - Unable to retrieve status for "
+                                   "report REPORT1: Error has occurred",
+                        "REPORT2": "CRITICAL - Unable to retrieve status for "
+                                   "report REPORT2: Error has occurred"
+                    },
+                    "performance": {}
+                },
+                "TENANT2": {
+                    "results": {
+                        "CORE": "CRITICAL - Unable to retrieve status for "
+                                "report CORE: Error has occurred"
+                    },
+                    "performance": {}
                 }
             }
         )
@@ -2479,6 +2657,79 @@ class StatusTests(unittest.TestCase):
             "AR for report REPORT4 - CRITICAL - Unable to retrieve "
             "availability\n"
             "AR for report REPORT5 - OK"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_ar_reports_all_with_exception(self):
+        results = {
+            "TENANT1": {
+                "results": {
+                    "REPORT1": "CRITICAL - Unable to retrieve availability "
+                               "for report REPORT1",
+                    "REPORT2": "CRITICAL - Unable to retrieve availability "
+                               "for report REPORT2",
+                    "REPORT3": "CRITICAL - BAD REQUEST"
+                },
+                "performance": {}
+            },
+            "TENANT2": {
+                "results": {
+                    "REPORT4": "CRITICAL - Unable to retrieve availability for "
+                               "report REPORT4",
+                    "REPORT5": "CRITICAL - Unable to retrieve availability for "
+                               "report REPORT5"
+                },
+                "performance": {}
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with AR results for report(s) REPORT1, "
+            "REPORT2, REPORT3 for tenant TENANT1; report(s) REPORT4, REPORT5 "
+            "for tenant TENANT2"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_ar_reports_all_with_exceptions_verbose(self):
+        results = {
+            "TENANT1": {
+                "results": {
+                    "REPORT1": "CRITICAL - Unable to retrieve availability "
+                               "for report REPORT1",
+                    "REPORT2": "CRITICAL - Unable to retrieve availability "
+                               "for report REPORT2",
+                    "REPORT3": "CRITICAL - BAD REQUEST"
+                },
+                "performance": {}
+            },
+            "TENANT2": {
+                "results": {
+                    "REPORT4": "CRITICAL - Unable to retrieve availability for "
+                               "report REPORT4",
+                    "REPORT5": "CRITICAL - Unable to retrieve availability for "
+                               "report REPORT5"
+                },
+                "performance": {}
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with AR results for report(s) REPORT1, "
+            "REPORT2, REPORT3 for tenant TENANT1; report(s) REPORT4, REPORT5 "
+            "for tenant TENANT2\n"
+            "TENANT1:\n"
+            "AR for report REPORT1 - CRITICAL - Unable to retrieve "
+            "availability for report REPORT1\n"
+            "AR for report REPORT2 - CRITICAL - Unable to retrieve "
+            "availability for report REPORT2\n"
+            "AR for report REPORT3 - CRITICAL - BAD REQUEST\n\n"
+            "TENANT2:\n"
+            "AR for report REPORT4 - CRITICAL - Unable to retrieve "
+            "availability for report REPORT4\n"
+            "AR for report REPORT5 - CRITICAL - Unable to retrieve "
+            "availability for report REPORT5"
         )
         self.assertEqual(status.get_code(), 2)
 

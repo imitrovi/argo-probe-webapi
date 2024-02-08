@@ -145,16 +145,12 @@ class WebAPIReports:
                                   f"report {name}: {str(e)}"
                         })
 
-                if tenant_performance:
-                    check_results.update({
-                        tenant: {
-                            "results": tenant_results,
-                            "performance": tenant_performance
-                        }
-                    })
-
-                else:
-                    check_results.update({tenant: {"results": tenant_results}})
+                check_results.update({
+                    tenant: {
+                        "results": tenant_results,
+                        "performance": tenant_performance
+                    }
+                })
 
             if "exception" in tenants_reports.keys():
                 check_results.update({
@@ -212,7 +208,9 @@ class Status:
             if len(report_with_error) > 0:
                 report_errors.update({tenant: report_with_error})
 
-        performance_data = f"time={round(time, 6)}s;size={size}B"
+        performance_data = ""
+        if time != 0 and size != 0:
+            performance_data = f"|time={round(time, 6)}s;size={size}B"
 
         return report_errors, tenants_with_errors, performance_data
 
@@ -220,7 +218,7 @@ class Status:
         reports_errors, tenants_errors, perf_data = self._get_info()
         if not (reports_errors or tenants_errors):
             first_line = (f"OK - {self._capitalize_rtype()} results "
-                          f"available for all tenants and reports|{perf_data}")
+                          f"available for all tenants and reports{perf_data}")
 
         else:
             first_line = "CRITICAL - Problem"
@@ -242,7 +240,7 @@ class Status:
                                   f"for tenant(s) {', '.join(tenants_errors)}")
 
             first_line = first_line.strip(";")
-            first_line = f"{first_line}|{perf_data}"
+            first_line = f"{first_line}{perf_data}"
 
         if self.verbosity == 0:
             return first_line
