@@ -5,7 +5,8 @@ from types import SimpleNamespace
 from unittest.mock import patch, call
 
 import requests
-from argo_probe_webapi.web_api import WebAPIReports, Status
+from argo_probe_webapi.web_api import WebAPIReports, Status, \
+    WebAPIReportsException
 
 mock_reports1 = {
     "status": {
@@ -1077,6 +1078,24 @@ class WebAPIReportsTests(unittest.TestCase):
                 "data": mock_reports2["data"]
             }
         })
+
+    @patch("argo_probe_webapi.web_api.requests.get")
+    def test_get_reports_successfully_if_single_tenant_wrong_token(
+            self, mock_get
+    ):
+        mock_get.side_effect = [
+            MockResponse(data=mock_reports1, status_code=200),
+            MockResponse(data=mock_reports2, status_code=200)
+        ]
+        arguments = self.arguments.copy()
+        arguments["tenant_token"] = "single-tenant-token"
+        with self.assertRaises(WebAPIReportsException) as context:
+            WebAPIReports(SimpleNamespace(**arguments))
+        self.assertEqual(
+            context.exception.__str__(),
+            "Wrong token definition: token needs to be defined as "
+            "<TENANT_NAME>:<TENANT_TOKEN>"
+        )
 
     @patch("argo_probe_webapi.web_api.requests.get")
     def test_get_reports_with_error_with_one_tenant(self, mock_get):

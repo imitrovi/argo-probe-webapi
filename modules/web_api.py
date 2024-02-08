@@ -12,6 +12,14 @@ def get_today():
     return datetime.datetime.today()
 
 
+class WebAPIReportsException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
 class WebAPIReports:
     def __init__(self, arguments):
         self.hostname = arguments.hostname
@@ -23,11 +31,18 @@ class WebAPIReports:
     @staticmethod
     def _get_tokens(tenant_tokens):
         tokens = dict()
-        for item in tenant_tokens:
-            tenant, token = item[0].split(":")
-            tokens.update({tenant: token})
+        try:
+            for item in tenant_tokens:
+                tenant, token = item[0].split(":")
+                tokens.update({tenant: token})
 
-        return tokens
+            return tokens
+
+        except ValueError:
+            raise WebAPIReportsException(
+                "Wrong token definition: token needs to be defined as "
+                "<TENANT_NAME>:<TENANT_TOKEN>"
+            )
 
     def _get_reports(self):
         reports = dict()
