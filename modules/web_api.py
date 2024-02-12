@@ -144,7 +144,7 @@ class WebAPIReports:
 
                                 tenant_results.update({name: "OK"})
 
-                            except (KeyError, AssertionError):
+                            except (KeyError, AssertionError, TypeError):
                                 tenant_results.update({
                                     name:
                                         f"CRITICAL - Unable to retrieve {obj} "

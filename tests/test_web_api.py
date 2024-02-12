@@ -803,6 +803,10 @@ mock_empty_statuses_status_results21 = {
     ]
 }
 
+mock_empty_groups_status_results21 = {
+    "groups": None
+}
+
 
 class MockResponse:
     def __init__(self, data, status_code):
@@ -945,6 +949,26 @@ def mock_check_emtpy_statuses_status_result(*args, **kwargs):
     else:
         return MockResponse(
             data=mock_empty_statuses_status_results21,
+            status_code=200
+        )
+
+
+def mock_check_emtpy_groups_status_result(*args, **kwargs):
+    if "REPORT1" in args[0]:
+        return MockResponse(
+            data=mock_status_results11,
+            status_code=200
+        )
+
+    elif "REPORT2" in args[0]:
+        return MockResponse(
+            data=mock_status_results12,
+            status_code=200
+        )
+
+    else:
+        return MockResponse(
+            data=mock_empty_groups_status_results21,
             status_code=200
         )
 
@@ -1972,13 +1996,98 @@ class WebAPIReportsTests(unittest.TestCase):
                 "TENANT2": {
                     "results": {
                         "CORE":
-                            "CRITICAL - Unable to retrieve status from report CORE"
+                            "CRITICAL - Unable to retrieve status from report "
+                            "CORE"
                     },
                     "performance": {
                         "CORE": {
                             "time": 0.3827,
                             "size": len(
                                 json.dumps(mock_empty_statuses_status_results21)
+                            )
+                        }
+                    }
+                }
+            }
+        )
+
+    @patch("argo_probe_webapi.web_api.get_today")
+    @patch("argo_probe_webapi.web_api.requests.get")
+    @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
+    def test_check_status_results_with_empty_groups(
+            self, mock_get_reports, mock_get, mock_today
+    ):
+        mock_get_reports.return_value = {
+            "TENANT1": {
+                "data": [mock_reports1["data"][0], mock_reports1["data"][1]]
+            },
+            "TENANT2": {"data": mock_reports2["data"]}
+        }
+        mock_get.side_effect = mock_check_emtpy_groups_status_result
+        mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        arguments = self.arguments.copy()
+        arguments["rtype"] = "status"
+        webapi = WebAPIReports(SimpleNamespace(**arguments))
+        results = webapi.check()
+        self.assertEqual(mock_get.call_count, 3)
+        mock_get.assert_has_calls([
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/status/REPORT1/"
+                "SERVICEGROUPS?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant1-token"
+                },
+                timeout=30
+            ),
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/status/REPORT2/"
+                "SITES?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant1-token"
+                },
+                timeout=30
+            ),
+            call(
+                "https://api.devel.argo.grnet.gr/api/v2/status/CORE/"
+                "SITES?start_time=2024-02-04T00:00:00Z&end_time="
+                "2024-02-04T23:59:59Z",
+                headers={
+                    "Accept": "application/json", "x-api-key": "tenant2-token"
+                },
+                timeout=30
+            )
+        ])
+        self.assertEqual(
+            results, {
+                "TENANT1": {
+                    "results": {
+                        "REPORT1": "OK",
+                        "REPORT2": "OK"
+                    },
+                    "performance": {
+                        "REPORT1": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results11))
+                        },
+                        "REPORT2": {
+                            "time": 0.3827,
+                            "size": len(json.dumps(mock_status_results12))
+                        }
+                    }
+                },
+                "TENANT2": {
+                    "results": {
+                        "CORE":
+                            "CRITICAL - Unable to retrieve status from report "
+                            "CORE"
+                    },
+                    "performance": {
+                        "CORE": {
+                            "time": 0.3827,
+                            "size": len(
+                                json.dumps(mock_empty_groups_status_results21)
                             )
                         }
                     }
