@@ -1,228 +1,292 @@
 #!/usr/bin/env python3
-import requests
-import argparse
 import datetime
-from datetime import timedelta
+
+import requests
 
 API_REPORTS = '/api/v2/reports'
 API_RESULTS = '/api/v2/results'
 API_STATUS = '/api/v2/status'
 
 
-def createAPICallUrl(arguments):
-    """Create the main API Call Reports Url to get the
-       profile and the topology.
-       Args:
-           arguments: the main input arguments.
-    """
-    profilesjson_list = list()
-    for i in range(len(arguments.tenant_token)):
-        token = arguments.tenant_token[i][0].split(":")[1]
+def get_today():
+    return datetime.datetime.today()
 
+
+class WebAPIReportsException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
+class WebAPIReports:
+    def __init__(self, arguments):
+        self.hostname = arguments.hostname
+        self.tenant_tokens = self._get_tokens(arguments.tenant_token)
+        self.type = arguments.rtype
+        self.day = arguments.day
+        self.timeout = arguments.timeout
+
+    @staticmethod
+    def _get_tokens(tenant_tokens):
+        tokens = dict()
         try:
-            # create the main headers for json call
-            headers = {'Accept': 'application/json', 'x-api-key': token}
+            for item in tenant_tokens:
+                tenant, token = item[0].split(":")
+                tokens.update({tenant: token})
 
-            # make the call to get the json
-            profiles = requests.get('https://' + arguments.hostname +
-                                    API_REPORTS, headers=headers, timeout=arguments.timeout)
+            return tokens
 
-            profiles.raise_for_status()
-            profilesjson = profiles.json()
+        except ValueError:
+            raise WebAPIReportsException(
+                "Wrong token definition: token needs to be defined as "
+                "<TENANT_NAME>:<TENANT_TOKEN>"
+            )
 
-        # check for connection request
-        except (requests.exceptions.RequestException, requests.exceptions.HTTPError):
-            print('CRITICAL - API cannot connect to https://' +
-                  arguments.hostname + API_REPORTS)
-
-            raise SystemExit(2)
-
-        # Remove disabled reports from response's data results
-        profilesjson["data"] = [
-            x for x in profilesjson["data"] if x["disabled"] == False]
-        profilesjson_list.append(profilesjson)
-
-    return profilesjson_list
-
-
-def convert_date(year, month, day, daytype):
-    """Construct the correct day
-       2017-05-16T00:00:00
-       Args:
-           year: the year
-           month: the month
-           day: the day
-           daytype: construct the start or end date for the api call
-    """
-    orig_date = str(datetime.datetime(year, month, day))
-    d = datetime.datetime.strptime(orig_date, '%Y-%m-%d %H:%M:%S')
-
-    if (daytype == 'start'):
-        d = d.strftime('%Y-%m-%dT00:00:00Z')
-    else:
-        d = d.strftime('%Y-%m-%dT23:59:59Z')
-
-    return d
-
-
-def CheckResults(arguments, profilesjson):
-    """Create the correct call based on report profile and topology.
-       Iterate to profiles and check results
-       Args:
-           arguments: the main input arguments
-           profilesjson: the json for a tenant with the reports
-    """
-    ProbeDescription = list()
-    for i in range(len(arguments.tenant_token)):
-        token = arguments.tenant_token[i][0].split(":")[1]
-
-        allReports = len(profilesjson[i]['data'])
-        count = 0
-        pathToUse = API_STATUS
-        if arguments.rtype == 'ar':
-            pathToUse = API_RESULTS
-
-        a = datetime.datetime.today()
-        timeBackCheck = arguments.day
-        yesterday = a - timedelta(timeBackCheck)
-        start = convert_date(yesterday.year, yesterday.month,
-                             yesterday.day, 'start')
-        end = convert_date(yesterday.year, yesterday.month,
-                           yesterday.day, 'end')
-
-        # get all report names
-        descriptions_list = list()
-        while (count < allReports):
-            reportName = profilesjson[i]['data'][count]['info']['name']
-            reportTopologyGroup = profilesjson[i]['data'][count]['topology_schema']['group']['group']['type']
-
-            # create the main headers for json call
+    def _get_reports(self):
+        reports = dict()
+        for tenant, token in self.tenant_tokens.items():
             try:
-                headers = {'Accept': 'application/json', 'x-api-key': token}
+                response = requests.get(
+                    f"https://{self.hostname}{API_REPORTS}",
+                    headers={"Accept": "application/json", "x-api-key": token},
+                    timeout=self.timeout
+                )
+                response.raise_for_status()
 
-                # make the call to get the json
-                if arguments.rtype == 'ar':
-                    urlToAPI = 'https://' + arguments.hostname + pathToUse+'/' + reportName+'/' + \
-                        reportTopologyGroup+'?start_time='+start+'&end_time='+end+'&granularity=daily'
-                else:
-                    urlToAPI = 'https://' + arguments.hostname + pathToUse+'/' + reportName + \
-                        '/'+reportTopologyGroup+'?start_time='+start+'&end_time=' + end
+                reports.update({tenant: {
+                    "data": [
+                        report for report in response.json()["data"] if
+                        report["disabled"] is False
+                    ]
+                }})
 
-                resultsAPI = requests.get(
-                    urlToAPI, headers=headers, timeout=arguments.timeout)
+            except (
+                requests.exceptions.RequestException,
+                requests.exceptions.HTTPError
+            ) as e:
+                reports.update({
+                    tenant: {
+                        "exception": f"CRITICAL - Error fetching reports for "
+                                     f"tenant {tenant}: {str(e)}"
+                    }
+                })
 
-                count += 1
-                resultsjson = resultsAPI.json()
+        return reports
 
-                # raise an HTTPError exception for non 200 status codes
-                if resultsAPI.status_code != 200:
-                    resultsAPI.raise_for_status()
+    def check(self):
+        reports = self._get_reports()
 
-            # check for connection request
-            except (requests.exceptions.RequestException, requests.exceptions.HTTPError):
-                description_report = 'CRITICAL - Reports cannot connect to (https://' + \
-                    arguments.hostname + pathToUse+'/' + reportName+'/'+reportTopologyGroup+')'
-                descriptions_list.append(description_report)
-                description_status = 'CRITICAL - Status code error. Cannot connect to (https://' + \
-                    arguments.hostname + pathToUse+'/' + reportName+'/'+reportTopologyGroup+')'
-                descriptions_list.append(description_status)
+        check_results = dict()
+        for tenant, tenants_reports in reports.items():
+            tenant_results = dict()
+            tenant_performance = dict()
+            if self.type == "ar":
+                path = API_RESULTS
 
-            # when we have results report check the json for the string we need
-            if (arguments.rtype == 'ar'):
-                description = 'OK - Availability for ' + reportName + ' is OK'
-                try:
-                    resultsjson['results'][0]['endpoints'][0]['results'][0]['availability']
-                except KeyError:
-                    description = 'CRITICAL - cannot retrieve availability from ' + reportName
+            else:
+                path = API_STATUS
 
-                descriptions_list.append(description)
+            date_considered = get_today() - datetime.timedelta(days=self.day)
 
-            # check status report
-            if (arguments.rtype == 'status'):
-                description = 'OK - status for ' + reportName + ' is OK'
-                try:
-                    resultsjson['groups'][0]['statuses']
-                except:
-                    description = 'CRITICAL - cannot retrieve status from ' + reportName
-                descriptions_list.append(description)
+            if "data" in tenants_reports.keys():
+                for report in tenants_reports["data"]:
+                    name = report["info"]["name"]
+                    url = (
+                        f"https://{self.hostname}{path}/{name}/"
+                        f"{report['topology_schema']['group']['group']['type']}"
+                        f"?start_time="
+                        f"{date_considered.strftime('%Y-%m-%dT00:00:00Z')}&"
+                        f"end_time="
+                        f"{date_considered.strftime('%Y-%m-%dT23:59:59Z')}"
+                    )
+                    if self.type == "ar":
+                        url = f"{url}&granularity=daily"
+                        obj = "availability"
 
-        ProbeDescription.append(descriptions_list)
-        
-    return ProbeDescription
+                    else:
+                        obj = "status"
+
+                    try:
+                        response = requests.get(
+                            url,
+                            headers={
+                                "Accept": "application/json",
+                                "x-api-key": self.tenant_tokens[tenant]
+                            },
+                            timeout=self.timeout
+                        )
+
+                        response.raise_for_status()
+
+                        results = response.json()
+                        response_time = response.elapsed.total_seconds()
+                        response_size = len(response.content)
+
+                        tenant_performance.update({
+                            name: {
+                                "time": response_time,
+                                "size": response_size
+                            }
+                        })
+
+                        if results:
+                            try:
+                                if self.type == "ar":
+                                    obj = "availability"
+                                    assert results["results"][0][
+                                        "endpoints"
+                                    ][0]["results"][0]["availability"]
+
+                                else:
+                                    assert results["groups"][0]["statuses"]
+
+                                tenant_results.update({name: "OK"})
+
+                            except (KeyError, AssertionError):
+                                tenant_results.update({
+                                    name:
+                                        f"CRITICAL - Unable to retrieve {obj} "
+                                        f"from report {name}"
+                                })
+
+                    except (
+                            requests.exceptions.RequestException,
+                            requests.exceptions.HTTPError
+                    ) as e:
+                        tenant_results.update({
+                            name: f"CRITICAL - Unable to retrieve {obj} for "
+                                  f"report {name}: {str(e)}"
+                        })
+
+                check_results.update({
+                    tenant: {
+                        "results": tenant_results,
+                        "performance": tenant_performance
+                    }
+                })
+
+            if "exception" in tenants_reports.keys():
+                check_results.update({
+                    tenant: {
+                        "REPORTS_EXCEPTION": tenants_reports["exception"]
+                    }
+                })
+
+        return check_results
 
 
-def utils(arguments, output_dict):
-    NAGIOS_RESULT = 0
-    msgs_ok = f'Ok - {(arguments.rtype).upper()} reports for all tenant/-s return results'
-    msgs_not_ok = ""
-    msg_final = ""
+class Status:
+    OK = 0
+    WARNING = 1
+    CRITICAL = 2
+    UNKNOWN = 3
 
-    for i in range(len(arguments.tenant_token)):
-        tenant = arguments.tenant_token[i][0].split(":")[0]
-        msg = ""
-        Description = ""
-        if arguments.rtype not in ('status', 'ar'):
-            msgs_not_ok += "CRITICAL: wrong value at argument rtype. rtype must be ar or status" \
-                if "CRITICAL: wrong value at argument rtype. rtype must be ar or status" not in msgs_not_ok else ""
-            msg = "CRITICAL: wrong value at argument rtype. rtype must be ar or status"
-            if NAGIOS_RESULT < 2:
-                NAGIOS_RESULT = 2
+    def __init__(self, rtype, data, verbosity):
+        if rtype == "ar":
+            rtype = "AR"
+        self.rtype = rtype
+        self.data = data
+        self.verbosity = verbosity
+
+    def _capitalize_rtype(self):
+        if self.rtype != "AR":
+            return self.rtype.capitalize()
+
         else:
-            for item in output_dict[i]:
+            return self.rtype
 
-                if "CRITICAL" in item:
-                    if "cannot retrieve" in item:
-                        fail_report = item.split()[-1]
-                        msgs_not_ok += f'CRITICAL - Problem with {arguments.rtype} report {fail_report} for tenant {tenant}' + \
-                            " / " if f'CRITICAL - Problem with {arguments.rtype} reports for tenant {tenant} return results' not in msgs_not_ok else ""
-                        msg = f'CRITICAL - Problem with {arguments.rtype} reports for tenant {tenant} return results'
-                        if NAGIOS_RESULT < 2:
-                            NAGIOS_RESULT = 2
-                elif "WARNING" in item:
-                    msgs_not_ok += f'WARNING - Problem with {arguments.rtype} reports for tenant {tenant} return results' + \
-                        " / " if f'WARNING - Problem with {arguments.rtype} reports for tenant {tenant} return results' not in msgs_not_ok else ""
-                    msg = f'WARNING - Problem with {arguments.rtype} reports for tenant {tenant} return results'
-                    if NAGIOS_RESULT < 1:
-                        NAGIOS_RESULT = 1
+    def _get_info(self):
+        report_errors = dict()
+        tenants_with_errors = list()
+        time = 0
+        size = 0
+        for tenant, data in self.data.items():
+            report_with_error = list()
+            for key, value in data.items():
+                if key == "REPORTS_EXCEPTION":
+                    tenants_with_errors.append(tenant)
+                    continue
+
                 else:
-                    msg = f'Ok - All {arguments.rtype} reports for tenant {tenant} return results'
-                    if NAGIOS_RESULT <= 0:
-                        NAGIOS_RESULT = 0
-          
-                Description += item + "\n"
+                    if key == "results":
+                        for report, status in value.items():
+                            if status != "OK":
+                                report_with_error.append(report)
 
-        msg_final += msg + "\n"
-        msg_final += f"Description: {Description}" + "\n"
-    
-    print(msgs_ok if msgs_not_ok == "" else msgs_not_ok.rstrip(" / "))
-    print("\n")
-    
-    if arguments.debug > 0:
-        print(msg_final)
-    
-    raise SystemExit(NAGIOS_RESULT)
+                    else:
+                        for report, perf_data in value.items():
+                            if perf_data["time"] > time:
+                                time = perf_data["time"]
+                                size = perf_data["size"]
 
+            if len(report_with_error) > 0:
+                report_errors.update({tenant: report_with_error})
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-H', dest='hostname',
-                        required=True, type=str, help='hostname')
-    parser.add_argument('-k', dest='tenant_token',
-                        required=True, type=str, nargs="+", help='tenant_token', action='append')
-    parser.add_argument('--rtype', dest='rtype', required=True,
-                        type=str, default='ar', help='status or ar (default ar)')
-    parser.add_argument('--day', dest='day', required=False, type=int, default=1,
-                        help='days to check (ex. 1 for yesterday, 2 for days ago) default yesterday')
-    parser.add_argument('-t', dest='timeout',
-                        required=False, type=int, default=180)
-    parser.add_argument('-v', '--verbose', dest="debug",
-                        help='Set verbosity level', action='count', default=0)
-    arguments = parser.parse_args()
+        performance_data = ""
+        if time != 0 and size != 0:
+            performance_data = f"|time={round(time, 6)}s;size={size}B"
 
-    profilejson = createAPICallUrl(arguments)
-    data = CheckResults(arguments, profilejson)
-    utils(arguments, data)
+        return report_errors, tenants_with_errors, performance_data
 
+    def get_message(self):
+        reports_errors, tenants_errors, perf_data = self._get_info()
+        if not (reports_errors or tenants_errors):
+            first_line = (f"OK - {self._capitalize_rtype()} results "
+                          f"available for all tenants and reports{perf_data}")
 
-if __name__ == "__main__":
-    main()
+        else:
+            first_line = "CRITICAL - Problem"
+
+            if reports_errors:
+                first_line = f"{first_line} with {self.rtype} results for"
+
+                for tenant, reports in reports_errors.items():
+                    first_line = (f"{first_line} report(s) "
+                                  f"{', '.join(reports)} for tenant {tenant};")
+
+            if tenants_errors:
+                if first_line.endswith("Problem"):
+                    first_line = (f"{first_line} fetching all reports for "
+                                  f"tenant(s) {', '.join(tenants_errors)}")
+
+                else:
+                    first_line = (f"{first_line} problem fetching all reports "
+                                  f"for tenant(s) {', '.join(tenants_errors)}")
+
+            first_line = first_line.strip(";")
+            first_line = f"{first_line}{perf_data}"
+
+        if self.verbosity == 0:
+            return first_line
+
+        else:
+            multiline = [first_line]
+            for tenant, data in self.data.items():
+                multiline.append(f"{tenant}:")
+                for key, value in data.items():
+                    if key == "REPORTS_EXCEPTION":
+                        multiline.append(value)
+
+                    elif key == "results":
+                        for report, status in value.items():
+                            multiline.append(
+                                f"{self._capitalize_rtype()} for report "
+                                f"{report} - {status}"
+                            )
+
+                    else:
+                        continue
+
+                multiline[-1] = f"{multiline[-1]}\n"
+
+            return "\n".join(multiline).strip()
+
+    def get_code(self):
+        reports_errors, tenant_errors, perf_data = self._get_info()
+        if reports_errors or tenant_errors:
+            return self.CRITICAL
+
+        else:
+            return self.OK
