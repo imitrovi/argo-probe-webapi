@@ -2554,6 +2554,34 @@ class StatusTests(unittest.TestCase):
         )
         self.assertEqual(status.get_code(), 2)
 
+    def test_error_fetching_all_reports_for_ar_reports_single_tenant(self):
+        results = {
+            "TENANT": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(), "CRITICAL - Problem fetching all reports"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_error_fetching_all_reports_for_ar_reports_single_tenant_verbose(
+            self
+    ):
+        results = {
+            "TENANT": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem fetching all reports\n"
+            "CRITICAL - Error fetching reports"
+        )
+        self.assertEqual(status.get_code(), 2)
+
     def test_multiple_errors_fetching_all_reports_for_ar_reports(self):
         results = {
             "TENANT1": {

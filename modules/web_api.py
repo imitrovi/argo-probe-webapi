@@ -259,8 +259,13 @@ class Status:
 
             if tenants_errors:
                 if first_line.endswith("Problem"):
-                    first_line = (f"{first_line} fetching all reports for "
-                                  f"tenant(s) {', '.join(tenants_errors)}")
+                    if self._number_of_tenants() == 1:
+                        first_line = f"{first_line} fetching all reports"
+                    else:
+                        first_line = (
+                            f"{first_line} fetching all reports for "
+                            f"tenant(s) {', '.join(tenants_errors)}"
+                        )
 
                 else:
                     first_line = (f"{first_line} problem fetching all reports "
