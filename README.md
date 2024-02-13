@@ -43,15 +43,14 @@ Example execution of probe for one tenant:
 
 ```
 # /usr/libexec/argo/probes/webapi/web-api -H api.devel.argo.grnet.gr -t 120 --rtype status --day 1 -k TENANT:<TENANT_TOKEN>
-OK - Status results available for all tenants and reports|time=0.196456s;size=5038B
+OK - Status results available for all reports|time=0.279122s;size=8927B
 ```
 
 Example execution of probe for one tenant with increased verbosity:
 
 ```
 # /usr/libexec/argo/probes/webapi/web-api -H api.devel.argo.grnet.gr -t 120 --rtype status --day 1 -k TENANT:<TENANT_TOKEN> -v
-OK - Status results available for all tenants and reports|time=0.205328s;size=12637B
-TENANT:
+OK - Status results available for all reports|time=0.279122s;size=8927B
 Status for report REPORT1 - OK
 Status for report REPORT2 - OK
 Status for report REPORT3 - OK

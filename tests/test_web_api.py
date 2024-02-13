@@ -1449,7 +1449,7 @@ class WebAPIReportsTests(unittest.TestCase):
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
-    def test_check_ar_results_with_emtpy_availability(
+    def test_check_ar_results_with_empty_availability(
             self, mock_get_reports, mock_get, mock_today
     ):
         mock_get_reports.return_value = {
@@ -1514,8 +1514,9 @@ class WebAPIReportsTests(unittest.TestCase):
                 },
                 "TENANT2": {
                     "results": {
-                        "CORE": "CRITICAL - Unable to retrieve availability from "
-                                "report CORE"
+                        "CORE":
+                            "CRITICAL - Unable to retrieve availability from "
+                            "report CORE"
                     },
                     "performance": {
                         "CORE": {
@@ -2370,6 +2371,73 @@ class StatusTests(unittest.TestCase):
         )
         self.assertEqual(status.get_code(), 0)
 
+    def test_ok_ar_reports_single_tenant(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "OK",
+                    "REPORT3": "OK"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "OK - AR results available for all reports"
+            "|time=0.210245s;size=5987B"
+        )
+        self.assertEqual(status.get_code(), 0)
+
+    def test_ok_ar_reports_single_tenant_verbose(self):
+        results = {
+            "TENANT1": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "OK",
+                    "REPORT3": "OK"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "OK - AR results available for all reports"
+            "|time=0.210245s;size=5987B\n"
+            "AR for report REPORT1 - OK\n"
+            "AR for report REPORT2 - OK\n"
+            "AR for report REPORT3 - OK"
+        )
+        self.assertEqual(status.get_code(), 0)
+
     def test_error_fetching_all_reports_for_ar_reports(self):
         results = {
             "TENANT1": {
@@ -2483,6 +2551,34 @@ class StatusTests(unittest.TestCase):
             "TENANT3:\n"
             "AR for report REPORT4 - OK\n"
             "AR for report REPORT5 - OK"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_error_fetching_all_reports_for_ar_reports_single_tenant(self):
+        results = {
+            "TENANT": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(), "CRITICAL - Problem fetching all reports"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_error_fetching_all_reports_for_ar_reports_single_tenant_verbose(
+            self
+    ):
+        results = {
+            "TENANT": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem fetching all reports\n"
+            "CRITICAL - Error fetching reports"
         )
         self.assertEqual(status.get_code(), 2)
 
@@ -2679,6 +2775,76 @@ class StatusTests(unittest.TestCase):
         )
         self.assertEqual(status.get_code(), 2)
 
+    def test_error_with_ar_reports_single_tenant(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "CRITICAL - Unable to retrieve availability "
+                               "from report REPORT2",
+                    "REPORT3": "OK"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with AR results for report(s) REPORT2"
+            "|time=0.210245s;size=5987B"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_error_with_ar_reports_single_tenant_verbose(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "CRITICAL - Unable to retrieve availability "
+                               "for report REPORT2",
+                    "REPORT3": "OK"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with AR results for report(s) REPORT2"
+            "|time=0.210245s;size=5987B\n"
+            "AR for report REPORT1 - OK\n"
+            "AR for report REPORT2 - CRITICAL - Unable to retrieve "
+            "availability for report REPORT2\n"
+            "AR for report REPORT3 - OK"
+        )
+        self.assertEqual(status.get_code(), 2)
+
     def test_multitple_errors_with_ar_reports(self):
         results = {
             "TENANT1": {
@@ -2785,6 +2951,76 @@ class StatusTests(unittest.TestCase):
             "AR for report REPORT4 - CRITICAL - Unable to retrieve "
             "availability\n"
             "AR for report REPORT5 - OK"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_multitple_errors_with_ar_reports_single_tenant(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "CRITICAL - Unable to retrieve availability "
+                               "from report REPORT2",
+                    "REPORT3": "CRITICAL - BAD REQUEST"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with AR results for report(s) REPORT2, REPORT3"
+            "|time=0.210245s;size=5987B"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_multiple_errors_with_ar_reports_single_tenant_verbose(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "CRITICAL - Unable to retrieve availability "
+                               "for report REPORT2",
+                    "REPORT3": "CRITICAL - BAD REQUEST"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with AR results for report(s) REPORT2, REPORT3"
+            "|time=0.210245s;size=5987B\n"
+            "AR for report REPORT1 - OK\n"
+            "AR for report REPORT2 - CRITICAL - Unable to retrieve "
+            "availability for report REPORT2\n"
+            "AR for report REPORT3 - CRITICAL - BAD REQUEST"
         )
         self.assertEqual(status.get_code(), 2)
 
@@ -2988,6 +3224,73 @@ class StatusTests(unittest.TestCase):
         )
         self.assertEqual(status.get_code(), 0)
 
+    def test_ok_status_reports_single_tenant(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "OK",
+                    "REPORT3": "OK"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "OK - Status results available for all reports"
+            "|time=0.210245s;size=5987B"
+        )
+        self.assertEqual(status.get_code(), 0)
+
+    def test_ok_status_reports_single_tenants_verbose(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "OK",
+                    "REPORT3": "OK"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "OK - Status results available for all reports"
+            "|time=0.210245s;size=5987B\n"
+            "Status for report REPORT1 - OK\n"
+            "Status for report REPORT2 - OK\n"
+            "Status for report REPORT3 - OK"
+        )
+        self.assertEqual(status.get_code(), 0)
+
     def test_error_fetching_all_reports_for_status_reports(self):
         results = {
             "TENANT1": {
@@ -3090,6 +3393,34 @@ class StatusTests(unittest.TestCase):
             "CRITICAL - Error fetching reports\n\n"
             "TENANT3:\n"
             "Status for report REPORT6 - OK"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_error_fetching_all_reports_for_status_reports_single_tenant(self):
+        results = {
+            "TENANT": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(), "CRITICAL - Problem fetching all reports"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_error_fetching_all_reports_status_reports_single_tenant_verbose(
+            self
+    ):
+        results = {
+            "TENANT": {
+                "REPORTS_EXCEPTION": "CRITICAL - Error fetching reports"
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem fetching all reports\n"
+            "CRITICAL - Error fetching reports"
         )
         self.assertEqual(status.get_code(), 2)
 
@@ -3288,6 +3619,76 @@ class StatusTests(unittest.TestCase):
         )
         self.assertEqual(status.get_code(), 2)
 
+    def test_error_with_status_reports_single_tenant(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "CRITICAL - Unable to retrieve status for "
+                               "report REPORT2",
+                    "REPORT3": "OK"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with status results for report(s) REPORT2"
+            "|time=0.210245s;size=5987B"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_error_with_status_reports_single_tenant_verbose(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "CRITICAL - Unable to retrieve status for "
+                               "report REPORT2",
+                    "REPORT3": "OK"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with status results for report(s) REPORT2"
+            "|time=0.210245s;size=5987B\n"
+            "Status for report REPORT1 - OK\n"
+            "Status for report REPORT2 - CRITICAL - Unable to retrieve status "
+            "for report REPORT2\n"
+            "Status for report REPORT3 - OK"
+        )
+        self.assertEqual(status.get_code(), 2)
+
     def test_multitple_errors_with_status_reports(self):
         results = {
             "TENANT1": {
@@ -3393,5 +3794,75 @@ class StatusTests(unittest.TestCase):
             "TENANT2:\n"
             "Status for report REPORT4 - CRITICAL - Unable to retrieve status\n"
             "Status for report REPORT5 - OK"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_multitple_errors_with_status_reports_single_tenant(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "CRITICAL - Unable to retrieve status for "
+                               "report REPORT2",
+                    "REPORT3": "CRITICAL - BAD REQUEST"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with status results for report(s) REPORT2, "
+            "REPORT3|time=0.210245s;size=5987B"
+        )
+        self.assertEqual(status.get_code(), 2)
+
+    def test_multiple_errors_with_status_reports_single_tenant_verbose(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "CRITICAL - Unable to retrieve status for "
+                               "report REPORT2",
+                    "REPORT3": "CRITICAL - BAD REQUEST"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="status", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "CRITICAL - Problem with status results for report(s) REPORT2, "
+            "REPORT3|time=0.210245s;size=5987B\n"
+            "Status for report REPORT1 - OK\n"
+            "Status for report REPORT2 - CRITICAL - Unable to retrieve status "
+            "for report REPORT2\n"
+            "Status for report REPORT3 - CRITICAL - BAD REQUEST"
         )
         self.assertEqual(status.get_code(), 2)
