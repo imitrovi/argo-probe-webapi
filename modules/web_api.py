@@ -254,8 +254,16 @@ class Status:
                 first_line = f"{first_line} with {self.rtype} results for"
 
                 for tenant, reports in reports_errors.items():
-                    first_line = (f"{first_line} report(s) "
-                                  f"{', '.join(reports)} for tenant {tenant};")
+                    if self._number_of_tenants() == 1:
+                        first_line = (
+                            f"{first_line} report(s) {', '.join(reports)}"
+                        )
+
+                    else:
+                        first_line = (
+                            f"{first_line} report(s) "
+                            f"{', '.join(reports)} for tenant {tenant};"
+                        )
 
             if tenants_errors:
                 if first_line.endswith("Problem"):
@@ -282,6 +290,7 @@ class Status:
             for tenant, data in self.data.items():
                 if self._number_of_tenants() > 1:
                     multiline.append(f"{tenant}:")
+
                 for key, value in data.items():
                     if key == "REPORTS_EXCEPTION":
                         multiline.append(value)
