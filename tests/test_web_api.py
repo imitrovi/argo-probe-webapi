@@ -1449,7 +1449,7 @@ class WebAPIReportsTests(unittest.TestCase):
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
-    def test_check_ar_results_with_emtpy_availability(
+    def test_check_ar_results_with_empty_availability(
             self, mock_get_reports, mock_get, mock_today
     ):
         mock_get_reports.return_value = {
@@ -1514,8 +1514,9 @@ class WebAPIReportsTests(unittest.TestCase):
                 },
                 "TENANT2": {
                     "results": {
-                        "CORE": "CRITICAL - Unable to retrieve availability from "
-                                "report CORE"
+                        "CORE":
+                            "CRITICAL - Unable to retrieve availability from "
+                            "report CORE"
                     },
                     "performance": {
                         "CORE": {
@@ -2367,6 +2368,73 @@ class StatusTests(unittest.TestCase):
             "AR for report REPORT5 - OK\n\n"
             "TENANT3:\n"
             "AR for report REPORT6 - OK"
+        )
+        self.assertEqual(status.get_code(), 0)
+
+    def test_ok_ar_reports_single_tenant(self):
+        results = {
+            "TENANT": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "OK",
+                    "REPORT3": "OK"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=0)
+        self.assertEqual(
+            status.get_message(),
+            "OK - AR results available for all reports"
+            "|time=0.210245s;size=5987B"
+        )
+        self.assertEqual(status.get_code(), 0)
+
+    def test_ok_ar_reports_single_tenant_verbose(self):
+        results = {
+            "TENANT1": {
+                "results": {
+                    "REPORT1": "OK",
+                    "REPORT2": "OK",
+                    "REPORT3": "OK"
+                },
+                "performance": {
+                    "REPORT1": {
+                        "time": 0.210245,
+                        "size": 5987
+                    },
+                    "REPORT2": {
+                        "time": 0.093002,
+                        "size": 1507
+                    },
+                    "REPORT3": {
+                        "time": 0.207804,
+                        "size": 10413
+                    }
+                }
+            }
+        }
+        status = Status(rtype="ar", data=results, verbosity=1)
+        self.assertEqual(
+            status.get_message(),
+            "OK - AR results available for all reports"
+            "|time=0.210245s;size=5987B\n"
+            "AR for report REPORT1 - OK\n"
+            "AR for report REPORT2 - OK\n"
+            "AR for report REPORT3 - OK"
         )
         self.assertEqual(status.get_code(), 0)
 

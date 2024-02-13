@@ -3,7 +3,6 @@ import datetime
 
 import requests
 
-API_REPORTS = '/api/v2/reports'
 API_RESULTS = '/api/v2/results'
 API_STATUS = '/api/v2/status'
 
@@ -49,7 +48,7 @@ class WebAPIReports:
         for tenant, token in self.tenant_tokens.items():
             try:
                 response = requests.get(
-                    f"https://{self.hostname}{API_REPORTS}",
+                    f"https://{self.hostname}/api/v2/reports",
                     headers={"Accept": "application/json", "x-api-key": token},
                     timeout=self.timeout
                 )
@@ -197,6 +196,9 @@ class Status:
         else:
             return self.rtype
 
+    def _number_of_tenants(self):
+        return len(self.data.keys())
+
     def _get_info(self):
         report_errors = dict()
         tenants_with_errors = list()
@@ -233,8 +235,17 @@ class Status:
     def get_message(self):
         reports_errors, tenants_errors, perf_data = self._get_info()
         if not (reports_errors or tenants_errors):
-            first_line = (f"OK - {self._capitalize_rtype()} results "
-                          f"available for all tenants and reports{perf_data}")
+            if self._number_of_tenants() == 1:
+                first_line = (
+                    f"OK - {self._capitalize_rtype()} results available for "
+                    f"all reports{perf_data}"
+                )
+
+            else:
+                first_line = (
+                    f"OK - {self._capitalize_rtype()} results available for "
+                    f"all tenants and reports{perf_data}"
+                )
 
         else:
             first_line = "CRITICAL - Problem"
@@ -264,7 +275,8 @@ class Status:
         else:
             multiline = [first_line]
             for tenant, data in self.data.items():
-                multiline.append(f"{tenant}:")
+                if self._number_of_tenants() > 1:
+                    multiline.append(f"{tenant}:")
                 for key, value in data.items():
                     if key == "REPORTS_EXCEPTION":
                         multiline.append(value)
