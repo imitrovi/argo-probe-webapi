@@ -4,7 +4,7 @@
 
 Name:          argo-probe-webapi
 Summary:       Probe checking ARGO WEB-API component.
-Version:       0.1.1
+Version:       0.2.0
 Release:       1%{?dist}
 License:       ASL 2.0
 Source0:       %{name}-%{version}.tar.gz
@@ -36,5 +36,10 @@ rm -rf %{buildroot}
 
 
 %changelog
+* Thu Mar 7 2024 Katarina Zailac <kzailac@srce.hr> - 0.2.0-1%{?dist}
+- ARGO-4477 Improve message when using single tenant
+- ARGO-4478 Bug when having problems with status report
+- ARGO-4474 Add performance data to argo-probe-webapi
+- ARGO-4443 Refactor of argo-probe-webapi report print
 * Fri Jun 10 2022 Katarina Zailac <kzailac@gmail.com> - 0.1.0-1%{?dist}
 - AO-650 Harmonize argo-mon probes

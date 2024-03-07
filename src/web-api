@@ -1,5 +1,69 @@
 #!/usr/bin/env python3
-from argo_probe_webapi import web_api
+import argparse
+import sys
 
-web_api.main()
+from argo_probe_webapi.web_api import WebAPIReports, Status, \
+    WebAPIReportsException
 
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="ARGO probe that checks ARGO Web-API for AR or status "
+                    "results",
+        add_help=False
+    )
+    required = parser.add_argument_group("required arguments")
+    optional = parser.add_argument_group("optional arguments")
+    required.add_argument(
+        '-H', '--hostname', dest='hostname', required=True, type=str,
+        help='hostname'
+    )
+    required.add_argument(
+        '-k', '--token', dest='tenant_token', required=True, type=str,
+        nargs="+", action='append',
+        help='token for authentication of tenant; must be of form TENANT:token'
+    )
+    required.add_argument(
+        '--rtype', dest='rtype', required=True, type=str, default='ar',
+        choices=["status", "ar"],
+        help='type of results to fetch: can be status or ar (default ar)'
+    )
+    required.add_argument(
+        '-t', dest='timeout', required=True, type=int, default=180,
+        help="seconds before connection times out (default: 180)"
+    )
+    optional.add_argument(
+        '--day', dest='day', required=False, type=int, default=1,
+        help='days for which to check the results; '
+             'eg. 1 for one day ago, 2 for two days ago (default 1)'
+    )
+    optional.add_argument(
+        '-v', '--verbose', dest="debug", action='count', default=0,
+        help='verbosity level; if used, the output has detailed lines for '
+             'individual reports'
+    )
+    optional.add_argument(
+        '-h', '--help', action='help', default=argparse.SUPPRESS,
+        help='Show this help message and exit'
+    )
+    arguments = parser.parse_args()
+
+    try:
+        webapi_reports = WebAPIReports(arguments)
+
+        results = webapi_reports.check()
+
+        status = Status(
+            rtype=arguments.rtype, data=results, verbosity=arguments.debug
+        )
+
+        print(status.get_message())
+        sys.exit(status.get_code())
+
+    except WebAPIReportsException as e:
+        print(f"UNKNOWN - {str(e)}")
+        sys.exit(3)
+
+
+if __name__ == "__main__":
+    main()

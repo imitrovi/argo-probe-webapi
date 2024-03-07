@@ -1,2 +1,7 @@
+Dockerfile
 __pycache__/
+conf-files/
 .coverage
+.pytest_cache
+docker/
+.idea/

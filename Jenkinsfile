@@ -11,6 +11,29 @@ pipeline {
 
     }
     stages {
+        stage ('Test'){
+            parallel {
+                stage ('Test Centos 7') {
+                    agent {
+                        docker {
+                            image 'argo.registry:5000/epel-7-ams'
+                            args '-u jenkins:jenkins'
+                        }
+                    }
+                    steps {
+                        echo 'Building Rpm...'
+                        sh '''
+                            cd ${WORKSPACE}/$PROJECT_DIR
+                            rm -f tests/argo_probe_webapi
+                            ln -s $PWD/modules/ tests/argo_probe_webapi
+                            coverage run -m xmlrunner discover --output-file junit.xml -v tests/
+                            coverage xml
+                        '''
+                        cobertura coberturaReportFile: '**/coverage.xml'
+                    }
+                }
+            }
+        }
         stage ('Build'){
             parallel {
                stage ('Build Centos 7') {
