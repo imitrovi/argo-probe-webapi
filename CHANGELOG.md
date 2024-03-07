@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0] - 2024-03-07
+
+### Changed
+
+* ARGO-4477 Improve message when using single tenant
+* ARGO-4443 Refactor of argo-probe-webapi report print
+
+### Added
+
+* ARGO-4474 Add performance data to argo-probe-webapi
+
+### Fixed
+
+* ARGO-4478 Bug when having problems with status report
+
 ## [0.1.1] - 2023-02-01
 
 ### Changed
