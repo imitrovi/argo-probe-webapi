@@ -12,7 +12,15 @@ BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root
 Group:         Network/Monitoring
 BuildArch:     noarch
 BuildRequires: python3-devel
+
+%if 0%{?el7}
 Requires:      python36-requests
+
+%else
+Requires:      python3-requests
+
+%endif
+
 
 %description
 This package includes probe that checks ARGO WEB-API.
