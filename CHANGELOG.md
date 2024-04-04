@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.1] - 2024-04-04
+
+### Added
+
+* AO-927 Create Rocky 9 rpm for argo-probe-webapi
+
 ## [0.2.0] - 2024-03-07
 
 ### Changed
