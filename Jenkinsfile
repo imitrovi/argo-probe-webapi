@@ -12,7 +12,7 @@ pipeline {
     }
     stages {
         stage ('Testing and building...'){
-            parallel {
+            stages {
                 stage ('CentOS 7') {
                     agent {
                         docker {
