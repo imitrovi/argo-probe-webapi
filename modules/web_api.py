@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import datetime
+import time
 
 import requests
 
 API_RESULTS = '/api/v2/results'
 API_STATUS = '/api/v2/status'
+BUFFER_TIME = 0.1
 
 
 def get_today():
@@ -52,6 +54,7 @@ class WebAPIReports:
                     headers={"Accept": "application/json", "x-api-key": token},
                     timeout=self.timeout
                 )
+                time.sleep(BUFFER_TIME)
                 response.raise_for_status()
 
                 reports.update({tenant: {
@@ -116,6 +119,7 @@ class WebAPIReports:
                             },
                             timeout=self.timeout
                         )
+                        time.sleep(BUFFER_TIME)
 
                         response.raise_for_status()
 
