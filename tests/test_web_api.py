@@ -1053,8 +1053,12 @@ def mock_check_status_result_all_with_response_errors(*args, **kwargs):
         )
 
 
+def mock_function(*args, **kwargs):
+    pass
+
+
 class WebAPIReportsTests(unittest.TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         self.arguments = {
             "tenant_token": [
                 ["TENANT1:tenant1-token"], ["TENANT2:tenant2-token"]
@@ -1063,15 +1067,18 @@ class WebAPIReportsTests(unittest.TestCase):
             "timeout": 30,
             "rtype": "status",
             "day": 1,
-            "debug": 0
+            "debug": 0,
+            "buffer_time": 100
         }
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.requests.get")
-    def test_get_reports_successfully(self, mock_get):
+    def test_get_reports_successfully(self, mock_get, mock_sleep):
         mock_get.side_effect = [
             MockResponse(data=mock_reports1, status_code=200),
             MockResponse(data=mock_reports2, status_code=200)
         ]
+        mock_sleep.side_effect = mock_function
         webapi = WebAPIReports(SimpleNamespace(**self.arguments))
         reports = webapi._get_reports()
         self.assertEqual(mock_get.call_count, 2)
@@ -1091,6 +1098,8 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ], any_order=True)
+        self.assertEqual(mock_sleep.call_count, 2)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(reports, {
             "TENANT1": {
                 "data": [
@@ -1103,14 +1112,16 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         })
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.requests.get")
-    def test_get_reports_successfully_if_single_tenant_wrong_token(
-            self, mock_get
+    def test_get_reports_if_single_tenant_wrong_token(
+            self, mock_get, mock_sleep
     ):
         mock_get.side_effect = [
             MockResponse(data=mock_reports1, status_code=200),
             MockResponse(data=mock_reports2, status_code=200)
         ]
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["tenant_token"] = "single-tenant-token"
         with self.assertRaises(WebAPIReportsException) as context:
@@ -1120,13 +1131,17 @@ class WebAPIReportsTests(unittest.TestCase):
             "Wrong token definition: token needs to be defined as "
             "<TENANT_NAME>:<TENANT_TOKEN>"
         )
+        self.assertFalse(mock_get.called)
+        self.assertFalse(mock_sleep.called)
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.requests.get")
-    def test_get_reports_with_error_with_one_tenant(self, mock_get):
+    def test_get_reports_with_error_with_one_tenant(self, mock_get, mock_sleep):
         mock_get.side_effect = [
             MockResponse(data=None, status_code=500),
             MockResponse(data=mock_reports2, status_code=200)
         ]
+        mock_sleep.side_effect = mock_function
         webapi = WebAPIReports(SimpleNamespace(**self.arguments))
         reports = webapi._get_reports()
         self.assertEqual(mock_get.call_count, 2)
@@ -1146,6 +1161,8 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ], any_order=True)
+        self.assertEqual(mock_sleep.call_count, 2)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             reports, {
                 "TENANT1": {
@@ -1158,12 +1175,16 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.requests.get")
-    def test_get_reports_with_error_with_two_tenants(self, mock_get):
+    def test_get_reports_with_error_with_two_tenants(
+            self, mock_get, mock_sleep
+    ):
         mock_get.side_effect = [
             MockResponse(data=None, status_code=500),
             MockResponse(data=None, status_code=500)
         ]
+        mock_sleep.side_effect = mock_function
         webapi = WebAPIReports(SimpleNamespace(**self.arguments))
         reports = webapi._get_reports()
         self.assertEqual(mock_get.call_count, 2)
@@ -1183,6 +1204,8 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ], any_order=True)
+        self.assertEqual(mock_sleep.call_count, 2)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             reports, {
                 "TENANT1": {
@@ -1196,11 +1219,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_ar_results_all_ok(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -1210,6 +1234,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_ar_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "ar"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -1243,7 +1268,9 @@ class WebAPIReportsTests(unittest.TestCase):
                 },
                 timeout=30
             )
-        ])
+        ], any_order=True)
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -1276,11 +1303,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_ar_results_with_exception_in_fetching_all_reports(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -1294,6 +1322,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_ar_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "ar"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -1327,7 +1356,9 @@ class WebAPIReportsTests(unittest.TestCase):
                 },
                 timeout=30
             )
-        ])
+        ], any_order=True)
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -1365,11 +1396,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_ar_results_with_error(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -1379,6 +1411,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_wrong_ar_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "ar"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -1412,7 +1445,9 @@ class WebAPIReportsTests(unittest.TestCase):
                 },
                 timeout=30
             )
-        ])
+        ], any_order=True)
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -1446,11 +1481,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_ar_results_with_empty_availability(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -1460,6 +1496,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_empty_availability_ar_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "ar"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -1493,7 +1530,9 @@ class WebAPIReportsTests(unittest.TestCase):
                 },
                 timeout=30
             )
-        ])
+        ], any_order=True)
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -1530,11 +1569,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_ar_results_with_response_exception(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -1544,6 +1584,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_ar_result_with_response_error
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "ar"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -1577,7 +1618,9 @@ class WebAPIReportsTests(unittest.TestCase):
                 },
                 timeout=30
             )
-        ])
+        ], any_order=True)
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -1607,11 +1650,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_ar_results_all_with_response_exceptions(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -1621,6 +1665,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_ar_result_all_with_response_errors
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "ar"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -1654,7 +1699,9 @@ class WebAPIReportsTests(unittest.TestCase):
                 },
                 timeout=30
             )
-        ])
+        ], any_order=True)
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -1676,11 +1723,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_status_results_all_ok(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -1690,6 +1738,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_status_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "status"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -1724,6 +1773,8 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ])
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -1756,11 +1807,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_status_results_with_exception_in_fetching_all_reports(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -1774,6 +1826,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_status_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "status"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -1808,6 +1861,8 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ])
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -1845,11 +1900,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_status_results_with_error(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -1859,6 +1915,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_wrong_status_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "status"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -1893,6 +1950,8 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ])
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -1928,11 +1987,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_status_results_with_empty_statuses(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -1942,6 +2002,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_emtpy_statuses_status_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "status"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -1976,6 +2037,8 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ])
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -2012,11 +2075,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_status_results_with_empty_groups(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -2026,6 +2090,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_emtpy_groups_status_result
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "status"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -2060,6 +2125,8 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ])
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -2096,11 +2163,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_status_results_with_response_exception(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -2110,6 +2178,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_status_result_with_response_error
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "status"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -2144,6 +2213,8 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ])
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
@@ -2173,11 +2244,12 @@ class WebAPIReportsTests(unittest.TestCase):
             }
         )
 
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.get_today")
     @patch("argo_probe_webapi.web_api.requests.get")
     @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
     def test_check_status_results_all_with_response_exceptions(
-            self, mock_get_reports, mock_get, mock_today
+            self, mock_get_reports, mock_get, mock_today, mock_sleep
     ):
         mock_get_reports.return_value = {
             "TENANT1": {
@@ -2187,6 +2259,7 @@ class WebAPIReportsTests(unittest.TestCase):
         }
         mock_get.side_effect = mock_check_status_result_all_with_response_errors
         mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
         arguments = self.arguments.copy()
         arguments["rtype"] = "status"
         webapi = WebAPIReports(SimpleNamespace(**arguments))
@@ -2221,6 +2294,8 @@ class WebAPIReportsTests(unittest.TestCase):
                 timeout=30
             )
         ])
+        self.assertEqual(mock_sleep.call_count, 3)
+        mock_sleep.assert_called_with(0.1)
         self.assertEqual(
             results, {
                 "TENANT1": {
