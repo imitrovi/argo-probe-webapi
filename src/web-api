@@ -38,6 +38,11 @@ def main():
              'eg. 1 for one day ago, 2 for two days ago (default 1)'
     )
     optional.add_argument(
+        "-b", "--buffer-time", dest="buffer_time", type=int, default=100,
+        help="buffer time in milliseconds to use between subsequent requests "
+             "(default: 100)"
+    )
+    optional.add_argument(
         '-v', '--verbose', dest="debug", action='count', default=0,
         help='verbosity level; if used, the output has detailed lines for '
              'individual reports'

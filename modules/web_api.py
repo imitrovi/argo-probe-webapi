@@ -6,7 +6,6 @@ import requests
 
 API_RESULTS = '/api/v2/results'
 API_STATUS = '/api/v2/status'
-BUFFER_TIME = 0.1
 
 
 def get_today():
@@ -28,6 +27,7 @@ class WebAPIReports:
         self.type = arguments.rtype
         self.day = arguments.day
         self.timeout = arguments.timeout
+        self.buffer_time = arguments.buffer_time / 1000.
 
     @staticmethod
     def _get_tokens(tenant_tokens):
@@ -54,7 +54,7 @@ class WebAPIReports:
                     headers={"Accept": "application/json", "x-api-key": token},
                     timeout=self.timeout
                 )
-                time.sleep(BUFFER_TIME)
+                time.sleep(self.buffer_time)
                 response.raise_for_status()
 
                 reports.update({tenant: {
@@ -119,7 +119,7 @@ class WebAPIReports:
                             },
                             timeout=self.timeout
                         )
-                        time.sleep(BUFFER_TIME)
+                        time.sleep(self.buffer_time)
 
                         response.raise_for_status()
 
