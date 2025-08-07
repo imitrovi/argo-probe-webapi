@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2] - 2025-08-07
+
+### Added
+
+* ARGO-5081 Add argument for buffer time
+* ARGO-4978 Improve webapi probe to have some buffer time between the requests
+
 ## [0.2.1] - 2024-04-04
 
 ### Added
