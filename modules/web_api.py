@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import datetime
+import time
 
 import requests
 
@@ -26,6 +27,7 @@ class WebAPIReports:
         self.type = arguments.rtype
         self.day = arguments.day
         self.timeout = arguments.timeout
+        self.buffer_time = arguments.buffer_time / 1000.
 
     @staticmethod
     def _get_tokens(tenant_tokens):
@@ -52,6 +54,7 @@ class WebAPIReports:
                     headers={"Accept": "application/json", "x-api-key": token},
                     timeout=self.timeout
                 )
+                time.sleep(self.buffer_time)
                 response.raise_for_status()
 
                 reports.update({tenant: {
@@ -116,6 +119,7 @@ class WebAPIReports:
                             },
                             timeout=self.timeout
                         )
+                        time.sleep(self.buffer_time)
 
                         response.raise_for_status()
 

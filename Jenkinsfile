@@ -12,40 +12,7 @@ pipeline {
     }
     stages {
         stage ('Testing and building...'){
-            parallel {
-                stage ('CentOS 7') {
-                    agent {
-                        docker {
-                            image 'argo.registry:5000/epel-7-ams'
-                            args '-u jenkins:jenkins'
-                        }
-                    }
-                    stages {
-                        stage('Test CentOS 7') {
-                            steps {
-                                echo 'Executing unit tests @ CentOS 7...'
-                                sh '''
-                                    cd ${WORKSPACE}/$PROJECT_DIR
-                                    rm -f tests/argo_probe_webapi
-                                    ln -s $PWD/modules/ tests/argo_probe_webapi
-                                    coverage run -m xmlrunner discover --output-file junit.xml -v tests/
-                                    coverage xml
-                                '''
-                                cobertura coberturaReportFile: '**/coverage.xml'
-                            }
-                        }
-                        stage('Build CentOS 7') {
-                            steps {
-                                echo 'Building CentOS 7 RPM...'
-                                withCredentials(bindings: [sshUserPrivateKey(credentialsId: 'jenkins-rpm-repo', usernameVariable: 'REPOUSER', \
-                                                                            keyFileVariable: 'REPOKEY')]) {
-                                    sh "/home/jenkins/build-rpm.sh -w ${WORKSPACE} -b ${BRANCH_NAME} -d centos7 -p ${PROJECT_DIR} -s ${REPOKEY}"
-                                }
-                                archiveArtifacts artifacts: '**/*.rpm', fingerprint: true
-                            }
-                        }
-                    }
-                }
+            stages {
                 stage('Rocky 9') {
                     agent {
                         docker {
@@ -72,7 +39,7 @@ pipeline {
                                 echo 'Building Rocky 9 RPM...'
                                 withCredentials(bindings: [sshUserPrivateKey(credentialsId: 'jenkins-rpm-repo', usernameVariable: 'REPOUSER', \
                                                                             keyFileVariable: 'REPOKEY')]) {
-                                    sh "/home/jenkins/build-rpm.sh -w ${WORKSPACE} -b ${BRANCH_NAME} -d rocky9 -p ${PROJECT_DIR} -s ${REPOKEY}"
+                                    sh "/home/jenkins/build-rpm.sh -w ${WORKSPACE} -b ${BRANCH_NAME} -d rocky9 -p ${PROJECT_DIR} -s $REPOKEY"
                                 }
                                 archiveArtifacts artifacts: '**/*.rpm', fingerprint: true
                             }
