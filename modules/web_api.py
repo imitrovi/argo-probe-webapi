@@ -123,7 +123,14 @@ class WebAPIReports:
 
                         response.raise_for_status()
 
-                        results = response.json()
+                        try:
+                            results = response.json()
+                        except ValueError as e:
+                            tenant_results.update({
+                                name: f"CRITICAL - JSON decode error"
+                            })
+                            continue
+                            
                         response_time = response.elapsed.total_seconds()
                         response_size = len(response.content)
 

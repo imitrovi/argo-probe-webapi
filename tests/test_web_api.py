@@ -1072,6 +1072,49 @@ class WebAPIReportsTests(unittest.TestCase):
         }
 
     @patch("argo_probe_webapi.web_api.time.sleep")
+    @patch("argo_probe_webapi.web_api.get_today")
+    @patch("argo_probe_webapi.web_api.requests.get")
+    @patch("argo_probe_webapi.web_api.WebAPIReports._get_reports")
+    def test_check_api_result_invalid_json(
+        self, mock_get_reports, mock_get, mock_today, mock_sleep
+    ):
+        """
+        Simulate a JSONDecodeError when response.json() is called due to invalid JSON.
+        """
+
+        class InvalidJSONResponse(MockResponse):
+
+            def __init__(self):
+                super().__init__(data=None, status_code=200)
+                self.content = "this is not json"
+
+            def json(self):
+                import json
+                raise json.JSONDecodeError("Expecting value", self.content, 0)
+
+        mock_get_reports.return_value = {
+            "TENANT1": {"data": [mock_reports1["data"][0]]}
+        }
+
+        mock_get.side_effect = lambda *a, **kw: InvalidJSONResponse()
+        mock_today.return_value = datetime.datetime(2024, 2, 5, 15, 33, 24)
+        mock_sleep.side_effect = mock_function
+
+        arguments = self.arguments.copy()
+        arguments["rtype"] = "ar"
+        webapi = WebAPIReports(SimpleNamespace(**arguments))
+
+        results = webapi.check()
+
+
+        self.assertIn("TENANT1", results)
+        self.assertIn("REPORT1", results["TENANT1"]["results"])
+        self.assertEqual(
+        results["TENANT1"]["results"]["REPORT1"],
+        "CRITICAL - JSON decode error"
+        )
+
+    @patch("argo_probe_webapi.web_api.time.sleep")
     @patch("argo_probe_webapi.web_api.requests.get")
     def test_get_reports_successfully(self, mock_get, mock_sleep):
         mock_get.side_effect = [
