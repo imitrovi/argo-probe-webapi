@@ -31,7 +31,7 @@ pipeline {
                                     coverage run -m xmlrunner discover --output-file junit.xml -v tests/
                                     coverage xml
                                 '''
-                                cobertura coberturaReportFile: '**/coverage.xml'
+                               // cobertura coberturaReportFile: '**/coverage.xml'
                             }
                         }
                         stage('Build Rocky 9') {
