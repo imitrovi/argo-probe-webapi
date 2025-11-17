@@ -32,6 +32,12 @@ pipeline {
                                     coverage xml
                                 '''
                                // cobertura coberturaReportFile: '**/coverage.xml'
+                               recordCoverage(
+                                    tools: [
+                                        [parser: 'COBERTURA', pattern: '**/coverage.xml'],
+                                        [parser: 'JUNIT', pattern: '**/junit.xml']
+                                    ]
+                                )
                             }
                         }
                         stage('Build Rocky 9') {
