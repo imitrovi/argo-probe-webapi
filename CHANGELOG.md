@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.3] - 2025-12-09
+
+### Fixed
+ARGO-5150 argo-probe-webapi sensor fix for case of empty response
+ARGO-5165 Replace Cobertura Plugin with Coverage Plugin
+
 ## [0.2.2] - 2025-08-07
 
 ### Added
